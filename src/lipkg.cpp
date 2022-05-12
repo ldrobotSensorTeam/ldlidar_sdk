@@ -22,6 +22,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <algorithm>
 
@@ -64,12 +65,10 @@ LiPkg::LiPkg(LDVersion ld_version)
     : timestamp_(0),
       speed_(0),
       error_times_(0),
-      frame_ready_(false),
-      is_pkg_ready_(false) {
+      is_frame_ready_(false),
+      ld_lidarstatus_(LidarStatus::NORMAL){
   ld_version_ = ld_version;
 }
-
-double LiPkg::GetSpeed(void) { return speed_ / 360.0; }
 
 bool LiPkg::AnalysisOne(uint8_t byte) {
   static enum {
@@ -123,19 +122,37 @@ bool LiPkg::AnalysisOne(uint8_t byte) {
 bool LiPkg::Parse(const uint8_t *data, long len) {
   for (int i = 0; i < len; i++) {
     if (AnalysisOne(data[i])) {
+      // judge block
+      AnalysisLidarIsBlocking(pkg.speed);
       // parse a package is success
       double diff = (pkg.end_angle / 100 - pkg.start_angle / 100 + 360) % 360;
-      if (diff > (double)pkg.speed * POINT_PER_PACK / 2300 * 3 / 2) {
+      if (diff > ((double)pkg.speed * POINT_PER_PACK / 2300 * 1.5)) {
         error_times_++;
       } else {
+        static uint16_t last_pkg_timestamp = 0;
         speed_ = pkg.speed;
         timestamp_ = pkg.timestamp;
+        uint16_t pkg_timestamp_delta_ms;
+        if (last_pkg_timestamp == 0){
+          pkg_timestamp_delta_ms = 5;
+        } else {
+          if ((timestamp_ - last_pkg_timestamp) < 0) {
+            pkg_timestamp_delta_ms = 30000 + timestamp_ - last_pkg_timestamp;
+          } else {
+            pkg_timestamp_delta_ms = timestamp_ - last_pkg_timestamp;
+          }
+        }
+        // std::cout << "[ldrobot] timestamp_ms: " << timestamp_ << std::endl;
+        // std::cout << "[ldrobot] delta_pkg_timestamp_ms: " << pkg_timestamp_delta_ms << std::endl;
+        uint64_t pkg_end_point_timestamp_ns = GetTime();
+        uint64_t pkg_timestamp_delta_ms_to_ns = pkg_timestamp_delta_ms*1000000; 
+        uint64_t pkg_start_point_timestamp_ns = pkg_end_point_timestamp_ns - pkg_timestamp_delta_ms_to_ns;
+        double pkg_timestamp_step_ns = pkg_timestamp_delta_ms_to_ns / static_cast<double>(POINT_PER_PACK - 1);
+        
         uint32_t diff =((uint32_t)pkg.end_angle + 36000 - (uint32_t)pkg.start_angle) % 36000;
         float step = diff / (POINT_PER_PACK - 1) / 100.0;
         float start = (double)pkg.start_angle / 100.0;
         float end = (double)(pkg.end_angle % 36000) / 100.0;
-        // std::cout << "start " << start << std::endl;
-        // std::cout << "end " << end << std::endl;
         PointData data;
         for (int i = 0; i < POINT_PER_PACK; i++) {
           data.distance = pkg.point[i].distance;
@@ -144,16 +161,10 @@ bool LiPkg::Parse(const uint8_t *data, long len) {
             data.angle -= 360.0;
           }
           data.intensity = pkg.point[i].intensity;
-          one_pkg_[i] = data;
-          // std::cout << "data.angle " << data.angle << " data.distance " <<
-          // data.distance
-          //           << " data.intensity " << (int)data.intensity <<
-          //           std::endl;
-          frame_tmp_.push_back(PointData(data.angle, data.distance, data.intensity));
+          data.stamp = static_cast<uint64_t>(pkg_start_point_timestamp_ns + (pkg_timestamp_step_ns * i));
+          frame_tmp_.push_back(PointData(data.angle, data.distance, data.intensity, data.stamp));
         }
-        // prevent angle invert
-        one_pkg_.back().angle = end;
-        is_pkg_ready_ = true;
+        last_pkg_timestamp = timestamp_;
       }
     }
   }
@@ -169,26 +180,32 @@ bool LiPkg::AssemblePacket() {
   for (auto n : frame_tmp_) {
     // wait for enough data, need enough data to show a circle
 	// enough data has been obtained
-    if ((n.angle < 20.0) &&
-        (last_angle > 340.0)) {
-      // std::cout << "count: " << count << std::endl;
+    if ((n.angle < 20.0) && (last_angle > 340.0)) {
       if ((count * GetSpeed()) > (kPointFrequence * 1.4)) {
         frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count - 1);
         return false;
       }
       data.insert(data.begin(), frame_tmp_.begin(), frame_tmp_.begin() + count);
-      
+      // std::cout << "[ldrobot] transform forward: " << data.size() << std::endl;
+
       SlTransform trans(ld_version_);
       data = trans.Transform(data); // transform raw data to stantard data  
-      // std::cout << "data.size() " << data.size() << std::endl;
+      std::sort(data.begin(), data.end(), [](PointData a, PointData b) { return a.angle < b.angle;});
 
+      // std::cout << "[ldrobot] filter forward: " << data.size() << std::endl;
       Slbf sb(speed_);
       tmp = sb.NearFilter(data); // filter noise point
+      // std::cout << "[ldrobot] filter backward: " << tmp.size() << std::endl;
 
       std::sort(tmp.begin(), tmp.end(), [](PointData a, PointData b) { return a.angle < b.angle; });
       if (tmp.size() > 0) {
         lidar_frame_data_ = tmp;
-        frame_ready_ = true;
+        AnalysisLidarIsOcclusion(tmp);
+        double lidar_spin_speed_hz = GetSpeed();
+        float start_angle = lidar_frame_data_.front().angle;
+        if ((lidar_spin_speed_hz >= 5.8) && (lidar_spin_speed_hz <= 6.2) && (start_angle < 1)){
+          SetFrameReady();
+        }
         frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
         return true;
       }
@@ -200,20 +217,91 @@ bool LiPkg::AssemblePacket() {
   return false;
 }
 
-void LiPkg::ShowData() {
-  std::cout << "lidar_frame_data_.size() " << lidar_frame_data_.size() << std::endl;
-  for (auto ele : lidar_frame_data_) {
-    std::cout << "angle: " << ele.angle << " "
-              << "distance(mm): " << ele.distance << " "
-              << "intensity: " << (int)ele.intensity << " " << std::endl;
+bool LiPkg::GetLaserScanData(Points2D& out) {
+  if (IsFrameReady()) {
+    ResetFrameReady();
+    out = lidar_frame_data_; 
+    return true;
+  } else {
+    return false;
   }
 }
 
-Points2D LiPkg::GetData() { return lidar_frame_data_; }
+double LiPkg::GetSpeed(void) { 
+  return speed_ / 360.0;  // unit  is Hz
+}
 
-const std::array<PointData, POINT_PER_PACK> &LiPkg::GetPkgData(void) {
-  is_pkg_ready_ = false;
-  return one_pkg_;
+LidarStatus LiPkg::GetLidarStatus(void) {
+  return ld_lidarstatus_;
+}
+
+bool LiPkg::IsFrameReady(void) {
+  return is_frame_ready_; 
+}
+
+void LiPkg::ResetFrameReady(void) {
+  mutex_lock.lock();
+  is_frame_ready_ = false;
+  mutex_lock.unlock(); 
+}
+
+void LiPkg::SetFrameReady(void) {
+  mutex_lock.lock();
+  is_frame_ready_ = true;
+  mutex_lock.unlock();
+}
+
+long LiPkg::GetErrorTimes(void) {
+  return error_times_; 
+}
+
+uint64_t LiPkg::GetTime(void) {
+  //! System time when first range was measured in nanoseconds
+  struct timeval timeofday;
+  gettimeofday(&timeofday, NULL);
+  return (static_cast<uint64_t>(timeofday.tv_sec) * 1000000000LL + static_cast<uint64_t>(timeofday.tv_usec) * 1000LL);
+}
+
+void LiPkg::AnalysisLidarIsBlocking(uint16_t lidar_speed_val){
+  static int16_t judge_block_cnt = 0;
+  static uint16_t last_speed = 0;
+  uint16_t curr_speed = lidar_speed_val;
+  if ((curr_speed == 0) && (last_speed == 0)) {
+    judge_block_cnt++;
+  } else {
+    judge_block_cnt--;
+    if (judge_block_cnt <= 0) {
+      judge_block_cnt = 0;
+    }
+  }
+  if (judge_block_cnt >= 5) {
+    ld_lidarstatus_ = LidarStatus::BLOCKING;
+    // std::cout << "[ldrobot] ERROR: lidar blocking" << std::endl;
+  } else {
+    ld_lidarstatus_ = LidarStatus::NORMAL;
+    // std::cout << "[ldrobot] lidar spin normal" << std::endl;
+  }
+  last_speed = curr_speed;
+}
+
+void LiPkg::AnalysisLidarIsOcclusion(Points2D& lidar_data) {
+  if (ld_lidarstatus_ == LidarStatus::BLOCKING) {
+    return;
+  }
+  uint16_t no_occlusion_count = 0;
+  for (auto point: lidar_data) {
+    if (point.distance != 0) {
+      no_occlusion_count++;
+    }
+  }
+  // std::cout << "[ldrobot] count: " << count << std::endl;
+  if (no_occlusion_count <= 5) {
+    ld_lidarstatus_ = LidarStatus::OCCLUSION;
+    // std::cout << "[ldrobot] ERROR: lidar occlusion" << std::endl;
+  } else {
+    ld_lidarstatus_ = LidarStatus::NORMAL;
+    // std::cout << "[ldrobot] lidar is normal" << std::endl;
+  }
 }
 
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF

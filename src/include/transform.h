@@ -28,13 +28,6 @@
 
 #include "pointdata.h"
 
-enum class LDVersion {
-  LD_ZERO,     // Zero  generation lidar
-  LD_THREE,    // Third generation lidar
-  LD_EIGHT,    // Eight generation radar
-  LD_FOURTEEN  // Fourteen generation radar
-};
-
 class SlTransform {
  private:
   bool to_right_hand_ = true;

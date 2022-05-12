@@ -12,7 +12,7 @@ message(STATUS "optional:-std=c++11")
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
 
 ## Get current directory files
@@ -24,7 +24,7 @@ include_directories(
 
 file(GLOB  MAIN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
-add_executable(${PROJECT_NAME}  ${MAIN_SRC})
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/linux_demo/main.cpp ${MAIN_SRC})
 target_link_libraries(${PROJECT_NAME} pthread)
 
 

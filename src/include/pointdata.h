@@ -26,26 +26,38 @@
 #include <iostream>
 #include <vector>
 
+enum class LDVersion {
+  LD_14,  // Fourteen generation lidar
+  NO_VER
+};
+
+enum class LidarStatus {
+  NORMAL = 0x00, // normal
+  BLOCKING = 0x01, // blocking
+  OCCLUSION = 0x02  // occlusion
+};
+
 struct PointData {
   // Polar coordinate representation
   float angle;         // Angle ranges from 0 to 359 degrees
   uint16_t distance;   // Distance is measured in millimeters
   uint8_t intensity;  // Intensity is 0 to 255
+  //! System time when first range was measured in nanoseconds
+  uint64_t stamp;
   // Cartesian coordinate representation
   double x;
   double y;
-  PointData(float angle, uint16_t distance, uint8_t intensity, double x = 0,
-            double y = 0) {
+  PointData(float angle, uint16_t distance, uint8_t intensity, uint64_t stamp = 0, double x = 0, double y = 0) {
     this->angle = angle;
     this->distance = distance;
     this->intensity = intensity;
+    this->stamp = stamp;
     this->x = x;
     this->y = y;
   }
   PointData() {}
   friend std::ostream &operator<<(std::ostream &os, const PointData &data) {
-    os << data.angle << " " << data.distance << " " << (int)data.intensity
-       << " " << data.x << " " << data.y;
+    os << data.angle << " " << data.distance << " " << (int)data.intensity << " " << data.stamp << " " << data.x << " " << data.y;
     return os;
   }
 };

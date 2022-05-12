@@ -67,8 +67,7 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
 
   double angle_delta_up_limit = curr_speed_ / kScanFre * 1.5;
   double angle_delta_down_limit = curr_speed_ / kScanFre - 0.18;
-  std::sort(pending.begin(), pending.end(),
-            [](PointData a, PointData b) { return a.angle < b.angle; });
+  std::sort(pending.begin(), pending.end(), [](PointData a, PointData b) { return a.angle < b.angle; });
 
   PointData last(-10, 0, 0);
 
@@ -97,8 +96,7 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
   if (fabs(first_item.angle + 360.f - last_item.angle) < angle_delta_up_limit &&
       abs(first_item.distance - last_item.distance) < dis_limit) {
     if (group.size() > 1) {
-      group.front().insert(group.front().begin(), group.back().begin(),
-                           group.back().end());
+      group.front().insert(group.front().begin(), group.back().begin(), group.back().end());
       group.erase(group.end() - 1);
     }
   }
@@ -134,49 +132,81 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
     }
 
     if (sunshine_rate > 0.5 && confidence_avg < kConfidenceLow) {
-      continue;
+      // continue;
+      for (auto& point : n) {
+        point.distance = 0;
+        point.intensity = 0;
+      }
     }
 
     if (enable_strict_policy_) {
-      if (dis_avg > 8100 && confidence_avg < kConfidenceLow &&
-          n.size() < 1)  
-      {
-        continue;
+      if (dis_avg > 8100 && confidence_avg < kConfidenceLow && n.size() < 1) {
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       /*else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() <
       2)
       {
               continue;
       }*/
-      else if (dis_avg > 6000 && confidence_avg < kConfidenceLow &&
-               n.size() < 2) 
-      {
-        continue;
-      } else if (dis_avg > 4000 && confidence_avg < kConfidenceHigh &&
-                 n.size() < 2)  
-      {
-        continue;
-      } else if (dis_avg > 300 /*&& confidence_avg < kConfidenceHigh */ &&
-                 n.size() < 2)  
-      {
-        continue;
+      else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() < 2) {
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
+      } else if (dis_avg > 4000 && confidence_avg < kConfidenceHigh && n.size() < 2) {
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
+      } else if (dis_avg > 300 /*&& confidence_avg < kConfidenceHigh */ && n.size() < 2) {
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       if (dis_avg < 300 && confidence_avg < kConfidenceHigh && n.size() < 3) {
-        continue;
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       if (dis_avg < 300 && sunshine_rate > 0.5 &&
           confidence_avg < kConfidenceMiddle && n.size() < 5) {
-        continue;
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       if (dis_avg < 200 && sunshine_rate > 0.4 &&
           confidence_avg < kConfidenceMiddle && n.size() < 6) {
-        continue;
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       if (dis_avg < 500 && sunshine_rate > 0.9 && n.size() < 3) {
-        continue;
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
       if (dis_avg < 200 && confidence_avg < kConfidenceMiddle && n.size() < 3) {
-        continue;
+        // continue;
+        for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+        }
       }
     }
 
@@ -191,6 +221,12 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
     diff_avg /= (double)(n.size() - 1);
 
     if (diff_avg > angle_delta_down_limit) {
+      normal.insert(normal.end(), n.begin(), n.end());
+    } else {
+      for (auto& point : n) {
+          point.distance = 0;
+          point.intensity = 0;
+      }
       normal.insert(normal.end(), n.begin(), n.end());
     }
   }

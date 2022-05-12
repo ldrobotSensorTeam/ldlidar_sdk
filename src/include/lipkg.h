@@ -25,6 +25,7 @@
 #include <array>
 #include <iostream>
 #include <vector>
+#include <mutex>
 
 #include "pointdata.h"
 #include "transform.h"
@@ -52,43 +53,36 @@ typedef struct __attribute__((packed)) {
 } LiDARFrameTypeDef;
 
 class LiPkg {
- public:
+public:
   LiPkg(LDVersion ld_version);
-  // Lidar spin speed (Hz)
-  double GetSpeed(void);
-  // time stamp of the packet
-  uint16_t GetTimestamp(void) { return timestamp_; }
-  // a packet is ready
-  bool IsPkgReady(void) { return is_pkg_ready_; }
-  // Lidar data frame is ready
-  bool IsFrameReady(void) { return frame_ready_; }
-  void ResetFrameReady(void) { frame_ready_ = false; }
-  // the number of errors in parser process of lidar data frame
-  long GetErrorTimes(void) { return error_times_; }
-  // original data package
-  const std::array<PointData, POINT_PER_PACK> &GetPkgData(void);
-  bool AnalysisOne(uint8_t byte);
-  // parse single packet
-  bool Parse(const uint8_t *data, long len);
-  // combine stantard data into data frames and calibrate
-  bool AssemblePacket();
-  // show a frame lidar data
-  void ShowData();
-  // get a frame lidar data
-  Points2D GetData();
+  bool AnalysisOne(uint8_t byte); // parse single packet
+  bool Parse(const uint8_t *data, long len); // ==
+  bool AssemblePacket(); // combine stantard data into data frames and calibrate
+  bool GetLaserScanData(Points2D& out); // get a frame lidar data
+  double GetSpeed(void); //get  Lidar spin speed (Hz)
+  LidarStatus GetLidarStatus(void);
 
- private:
+private:
+  bool IsFrameReady(void);  // get Lidar data frame ready flag
+  void ResetFrameReady(void);  // reset frame ready flag
+  void SetFrameReady(void);    // set frame ready flag
+  long GetErrorTimes(void); // the number of errors in parser process of lidar data frame
+  uint64_t GetTime(void); // systime ns
+  void AnalysisLidarIsBlocking(uint16_t lidar_speed_val);
+  void AnalysisLidarIsOcclusion(Points2D& lidar_data);
+
+private:
   const int kPointFrequence = 2300;
   LDVersion ld_version_;
-  bool is_pkg_ready_;
-  bool frame_ready_;
-  uint16_t timestamp_;
+  LidarStatus ld_lidarstatus_;
+  bool is_frame_ready_;
+  uint16_t timestamp_; // time stamp of the packet
   double speed_;
   long error_times_;
   LiDARFrameTypeDef pkg;
   Points2D lidar_frame_data_;
-  std::array<PointData, POINT_PER_PACK> one_pkg_;
-  std::vector<PointData> frame_tmp_;
+  Points2D frame_tmp_;
+  std::mutex mutex_lock;
 };
 
 #endif  // __LIPKG_H

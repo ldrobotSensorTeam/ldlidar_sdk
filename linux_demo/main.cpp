@@ -19,18 +19,12 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-
-#include <iostream>
-
-#include "cmd_interface_linux.h"
-#include "lipkg.h"
+#include "ldlidar_node.h"
 
 int main(int argc, char **argv) {
-  std::cout << "[ldrobot] SDK Pack Version is " << "v2.1.4" << std::endl;
   
   if (argc != 3) {
+    perror("[ldrobot] cmd error");
     std::cout << "[ldrobot] please input: ./ldlidar_sl <product_name> <serial_number>" << std::endl;
     std::cout << "[ldrobot] example:" << std::endl;
     std::cout << "./ldlidar_sl LD** /dev/ttyUSB*" << std::endl;
@@ -40,52 +34,53 @@ int main(int argc, char **argv) {
   }
 
   std::string product(argv[1]);
-  
-  LiPkg *lidar = nullptr;
-  uint32_t baudrate = 0;
+  std::string port_name(argv[2]);
+  ldlidar::LDlidarNode* node = nullptr;
+
   if (product == "LD14") {
-    baudrate = 115200;
-    lidar = new LiPkg(LDVersion::LD_FOURTEEN);
+    node = new ldlidar::LDlidarNode(LDVersion::LD_14,port_name);
   } else {
     perror("[ldrobot] lidar product_name is not correct !!!\n");
     exit(EXIT_FAILURE);
   }
 
-  CmdInterfaceLinux cmd_port(baudrate);
-  std::string port_name(argv[2]);
-  
-  if (port_name.empty()) {
-    std::cout << "[ldrobot] Can't find LiDAR_" << product << std::endl;
-    exit(EXIT_FAILURE);
-  }else {
-	  std::cout << "[ldrobot] Found LiDAR_" << product << " " << port_name << std::endl;
-  }
-
-  cmd_port.SetReadCallback([&lidar](const char *byte, size_t len) {
-    if (lidar->Parse((uint8_t *)byte, len)) {
-      lidar->AssemblePacket();
-    }
-  });
-
-  if (!cmd_port.Open(port_name)) {
-    perror("[ldrobot] serial is not open !!!\n");
+  if (node->StartNode()) {
+    std::cout << "[ldrobot] ldldiar node start is success" << std::endl;
+  } else {
+    fprintf(stderr, "[ldrobot] ERROR: lidar node start is failed\n");
     exit(EXIT_FAILURE);
   }
 
   Points2D laser_scan;
+  double lidar_spin_freq;
+  LidarStatus lidar_status;
 
   while (1) {
-    if (lidar->IsFrameReady()) {
-      std::cout << "[ldrobot] speed(Hz)： " << lidar->GetSpeed() << std::endl;
-      std::cout << "[ldrobot] pack errcount: " << lidar->GetErrorTimes() << std::endl;
-      laser_scan = lidar->GetData();
-      std::cout << "[ldrobot] laser_scan.size() " << laser_scan.size() << std::endl;
-      for (auto ele : laser_scan) {
-        std::cout << "[ldrobot] angle: " << ele.angle << " "
-                  << "distance(mm): " << ele.distance << " "
-                  << "intensity: " << (int)ele.intensity << " " << std::endl;
+    if (node->GetLidarWorkStatus(lidar_status)) {
+      switch (lidar_status){
+        case LidarStatus::NORMAL:
+          if (node->GetLaserScan(laser_scan)) {
+            // get lidar normal data
+            if (node->GetLidarSpinFreq(lidar_spin_freq)) {
+              std::cout << "[ldrobot] speed(Hz): " << lidar_spin_freq << std::endl;
+            }
+            for (auto ele : laser_scan) {
+              std::cout << "[ldrobot] angle: " << ele.angle << " "
+                        << "distance(mm): " << ele.distance << " "
+                        << "intensity: " << (int)ele.intensity << " "
+                        << "stamp(ns): " << ele.stamp << std::endl;
+            }
+          }
+          break;
+        case LidarStatus::BLOCKING:
+          std::cout << "lidar status is blocking" << std::endl;
+          break;
+        case LidarStatus::OCCLUSION:
+          std::cout << "lidar status is occlusion" << std::endl;
+          break;
+        default:
+          break;
       }
-      lidar->ResetFrameReady();
     }
     // usleep(1000);  // sleep 1ms
   }

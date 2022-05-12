@@ -31,6 +31,7 @@
 #include <thread>
 #include <vector>
 
+
 class CmdInterfaceLinux {
  public:
   CmdInterfaceLinux(uint32_t com_baudrate);
