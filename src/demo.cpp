@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     std::cout << "./ldlidar_sl LD** /dev/ttyS*" << std::endl;
     exit(EXIT_FAILURE);
   }
+  std::cout << "[ldrobot] SDK Pack Version is " << "v2.2.1" << std::endl;
 
   std::string product(argv[1]);
   std::string port_name(argv[2]);

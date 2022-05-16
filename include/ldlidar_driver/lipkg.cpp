@@ -217,6 +217,12 @@ bool LiPkg::AssemblePacket() {
   return false;
 }
 
+void LiPkg::CommReadCallBack(const char *byte, size_t len) {
+  if (this->Parse((uint8_t *)byte, len)) {
+    this->AssemblePacket();
+  }
+}
+
 bool LiPkg::GetLaserScanData(Points2D& out) {
   if (IsFrameReady()) {
     ResetFrameReady();
@@ -240,15 +246,17 @@ bool LiPkg::IsFrameReady(void) {
 }
 
 void LiPkg::ResetFrameReady(void) {
-  mutex_lock.lock();
-  is_frame_ready_ = false;
-  mutex_lock.unlock(); 
+  {
+    std::lock_guard<std::mutex> _(mutex_lock);
+    is_frame_ready_ = false;
+  }
 }
 
 void LiPkg::SetFrameReady(void) {
-  mutex_lock.lock();
-  is_frame_ready_ = true;
-  mutex_lock.unlock();
+  {
+    std::lock_guard<std::mutex> _(mutex_lock);
+    is_frame_ready_ = true;
+  }
 }
 
 long LiPkg::GetErrorTimes(void) {

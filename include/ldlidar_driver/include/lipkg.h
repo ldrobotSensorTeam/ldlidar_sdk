@@ -55,14 +55,15 @@ typedef struct __attribute__((packed)) {
 class LiPkg {
 public:
   LiPkg(LDVersion ld_version);
-  bool AnalysisOne(uint8_t byte); // parse single packet
-  bool Parse(const uint8_t *data, long len); // ==
-  bool AssemblePacket(); // combine stantard data into data frames and calibrate
+  void CommReadCallBack(const char *byte, size_t len);
   bool GetLaserScanData(Points2D& out); // get a frame lidar data
   double GetSpeed(void); //get  Lidar spin speed (Hz)
   LidarStatus GetLidarStatus(void);
 
 private:
+  bool AnalysisOne(uint8_t byte); // parse single packet
+  bool Parse(const uint8_t *data, long len); // ==
+  bool AssemblePacket(); // combine stantard data into data frames and calibrate
   bool IsFrameReady(void);  // get Lidar data frame ready flag
   void ResetFrameReady(void);  // reset frame ready flag
   void SetFrameReady(void);    // set frame ready flag

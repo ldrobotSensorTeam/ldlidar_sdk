@@ -39,7 +39,6 @@ class LDlidarNode {
   CmdInterfaceLinux* comm_serial_;
   bool is_init_flag_;
   bool is_start_flag;
-  void CommReadCallBack(const char *byte, size_t len);
 
   public:
   LDlidarNode(LDVersion product_name, std::string serial_port_name);

@@ -29,7 +29,7 @@ LDlidarNode::LDlidarNode(LDVersion product_name, std::string serial_port_name) {
   comm_serial_ = nullptr;
   is_init_flag_ = false;
   is_start_flag = false;
-  std::cout << "[ldrobot] SDK Pack Version is " << "v2.2.0" << std::endl;
+
   if (product_name_ == LDVersion::LD_14) {
     if (serial_port_name_.empty()) {
       fprintf(stderr, "[ldrobot] error: LDlidarNode create, input <serial_port_name> is fault.\n");
@@ -65,7 +65,7 @@ bool LDlidarNode::StartNode(void) {
     return false;
   }
 
-  comm_serial_->SetReadCallback(std::bind(&LDlidarNode::CommReadCallBack, this, std::placeholders::_1, std::placeholders::_2));
+  comm_serial_->SetReadCallback(std::bind(&LiPkg::CommReadCallBack, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
 
   is_start_flag = true;
   return true;
@@ -97,12 +97,6 @@ bool  LDlidarNode::GetLidarSpinFreq(double& spin_hz) {
   }
   spin_hz = comm_pkg_->GetSpeed();
   return true;
-}
-
-void LDlidarNode::CommReadCallBack(const char *byte, size_t len) {
-  if (this->comm_pkg_->Parse((uint8_t *)byte, len)) {
-    this->comm_pkg_->AssemblePacket();
-  }
 }
 
 bool LDlidarNode::GetLidarWorkStatus(LidarStatus& status) {
