@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ldlidar_sl)
 
-set(VAL  1)
+set(VAL  0)
 if(${VAL} EQUAL 1)
   set(CMAKE_BUILD_TYPE "Release") 
   set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -Wall")
@@ -23,7 +23,7 @@ endif()
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/ldlidar_driver/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/ldlidar_driver/include
 )
 
 ## Get current directory files
@@ -33,9 +33,9 @@ include_directories(
  # message("-- #define USE_SLBF")
 #endif()
 
-file(GLOB  LDLIDAR_DRIVER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/include/ldlidar_driver/*.cpp)
+file(GLOB  LDLIDAR_DRIVER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../include/ldlidar_driver/*.cpp)
 
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/linux_demo/demo.cpp ${LDLIDAR_DRIVER_SRC})
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/demo.cpp ${LDLIDAR_DRIVER_SRC})
 target_link_libraries(${PROJECT_NAME} pthread)
 
 

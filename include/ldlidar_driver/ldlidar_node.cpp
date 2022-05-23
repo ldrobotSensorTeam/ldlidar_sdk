@@ -22,27 +22,11 @@
 
 namespace ldlidar {
 
-LDlidarNode::LDlidarNode(LDVersion product_name, std::string serial_port_name) {
-  product_name_ = product_name;
-  serial_port_name_ = serial_port_name;
-  comm_pkg_ = nullptr;
-  comm_serial_ = nullptr;
-  is_init_flag_ = false;
+LDlidarNode::LDlidarNode(){
+  comm_pkg_ = new LiPkg();
+  comm_serial_ = new CmdInterfaceLinux();
   is_start_flag = false;
 
-  if (product_name_ == LDVersion::LD_14) {
-    if (serial_port_name_.empty()) {
-      fprintf(stderr, "[ldrobot] error: LDlidarNode create, input <serial_port_name> is fault.\n");
-      exit(EXIT_FAILURE);
-    } else {
-      comm_pkg_ = new LiPkg(product_name_);
-      comm_serial_ = new CmdInterfaceLinux(115200);
-    }
-  } else {
-    fprintf(stderr, "[ldrobot] error: LDlidarNode create, input <product_name> is fault.\n");
-    exit(EXIT_FAILURE);
-  }
-  is_init_flag_ = true;
 }
 
 LDlidarNode::~LDlidarNode() {
@@ -55,34 +39,36 @@ LDlidarNode::~LDlidarNode() {
   }
 }
 
-bool LDlidarNode::StartNode(void) {
-  if (!is_init_flag_) {
-    return false;
-  }
+bool LDlidarNode::StartNode(LDType product_name, std::string serial_port_name, bool to_right_hand, bool is_filter) {
 
-  if (!(comm_serial_->Open(serial_port_name_))) {
-    fprintf(stderr,"[ldrobot] serial is not open %s\n", serial_port_name_.c_str());
-    return false;
-  }
+  comm_pkg_->SetProductType(product_name);
+  comm_pkg_->SetLaserScanDir(to_right_hand);
+  comm_pkg_->SetNoiseFilter(is_filter);
 
   comm_serial_->SetReadCallback(std::bind(&LiPkg::CommReadCallBack, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+
+  if (!(comm_serial_->Open(serial_port_name, 115200))) {
+    std::cerr << "[ldrobot] serial is not open " << serial_port_name << std::endl;
+    return false;
+  }
 
   is_start_flag = true;
   return true;
 }
 
 bool LDlidarNode::StopNode(void)  {
-  if (!is_init_flag_) {
-    return false;
+  if (!is_start_flag) {
+    return true;
   } 
+
   comm_serial_->Close();
   is_start_flag = false;
+  
+  return true;
 }
 
 bool LDlidarNode::GetLaserScan(Points2D& output) {
-  if (!is_init_flag_) {
-    return false;
-  } else if (!is_start_flag) {
+  if (!is_start_flag) {
     return false;
   }
   bool ret = comm_pkg_->GetLaserScanData(output);
@@ -90,9 +76,7 @@ bool LDlidarNode::GetLaserScan(Points2D& output) {
 }
 
 bool  LDlidarNode::GetLidarSpinFreq(double& spin_hz) {
-  if (!is_init_flag_) {
-    return false;
-  }else if (!is_start_flag) {
+  if (!is_start_flag) {
     return false;
   }
   spin_hz = comm_pkg_->GetSpeed();
@@ -100,15 +84,18 @@ bool  LDlidarNode::GetLidarSpinFreq(double& spin_hz) {
 }
 
 bool LDlidarNode::GetLidarWorkStatus(LidarStatus& status) {
-  if (!is_init_flag_) {
-    return false;
-  }else if (!is_start_flag) {
+  if (!is_start_flag) {
     return false;
   }
   status = comm_pkg_->GetLidarStatus();
   return true;
 }
 
+std::string LDlidarNode::GetSdkVersionNum(void) {
+  std::string ver = comm_pkg_->GetSdkPackVersionNum();
+  return ver;
 }
+
+} // namespace ldlidar
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

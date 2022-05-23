@@ -21,46 +21,41 @@
 
 #include "ldlidar_node.h"
 
-int main(int argc, char **argv) {
+int pressure_test(int argc, char **argv) {
   
-  if (argc != 3) {
-    perror("[ldrobot] cmd error");
-    std::cout << "[ldrobot] please input: ./ldlidar_sl <product_name> <serial_number>" << std::endl;
-    std::cout << "[ldrobot] example:" << std::endl;
-    std::cout << "./ldlidar_sl LD** /dev/ttyUSB*" << std::endl;
-    std::cout << "or" << std::endl;
-    std::cout << "./ldlidar_sl LD** /dev/ttyS*" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  std::cout << "[ldrobot] SDK Pack Version is " << "v2.2.1" << std::endl;
-
-  std::string product(argv[1]);
-  std::string port_name(argv[2]);
-  ldlidar::LDlidarNode* node = nullptr;
-
-  if (product == "LD14") {
-    node = new ldlidar::LDlidarNode(LDVersion::LD_14,port_name);
-  } else {
-    perror("[ldrobot] lidar product_name is not correct !!!\n");
-    exit(EXIT_FAILURE);
-  }
-
-  if (node->StartNode()) {
+  // if (argc != 2) {
+  //   std::cerr << "[ldrobot] cmd error" << std::endl;
+  //   std::cerr << "[ldrobot] please input: ./ldlidar_sl <serial_number>" << std::endl;
+  //   std::cerr << "[ldrobot] example:" << std::endl;
+  //   std::cerr << "./ldlidar_sl /dev/ttyUSB*" << std::endl;
+  //   std::cerr << "or" << std::endl;
+  //   std::cerr << "./ldlidar_sl /dev/ttyS*" << std::endl;
+  //   exit(EXIT_FAILURE);
+  // }
+  
+  std::string port_name("/dev/ttyUSB0");
+  
+  ldlidar::LDlidarNode* node = new ldlidar::LDlidarNode();
+  
+  std::cout << "[ldrobot] SDK Pack Version is " << node->GetSdkVersionNum() << std::endl;
+  if (node->StartNode(ldlidar::LDType::LD_14, port_name, true, true)) {
     std::cout << "[ldrobot] ldldiar node start is success" << std::endl;
   } else {
-    fprintf(stderr, "[ldrobot] ERROR: lidar node start is failed\n");
+    std::cerr << "[ldrobot] ERROR: lidar node start is fail" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  Points2D laser_scan;
+  ldlidar::Points2D laser_scan;
   double lidar_spin_freq;
-  LidarStatus lidar_status;
-
-  while (1) {
+  ldlidar::LidarStatus lidar_status;
+  auto last_time = std::chrono::steady_clock::now();
+  int cnt = 100;
+  while (cnt--) {
     if (node->GetLidarWorkStatus(lidar_status)) {
       switch (lidar_status){
-        case LidarStatus::NORMAL:
+        case ldlidar::LidarStatus::NORMAL:
           if (node->GetLaserScan(laser_scan)) {
+            last_time = std::chrono::steady_clock::now();
             // get lidar normal data
             if (node->GetLidarSpinFreq(lidar_spin_freq)) {
               std::cout << "[ldrobot] speed(Hz): " << lidar_spin_freq << std::endl;
@@ -73,20 +68,42 @@ int main(int argc, char **argv) {
             }
           }
           break;
-        case LidarStatus::BLOCKING:
+        case ldlidar::LidarStatus::BLOCKING:
           std::cout << "lidar status is blocking" << std::endl;
           break;
-        case LidarStatus::OCCLUSION:
+        case ldlidar::LidarStatus::OCCLUSION:
           std::cout << "lidar status is occlusion" << std::endl;
           break;
         default:
           break;
       }
     }
-    // usleep(1000);  // sleep 1ms
+
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-last_time).count() > 1000) {
+			std::cout << "[ldrobot] lidar pub data is time out, please check lidar device" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+    usleep(1000*166);  // sleep 166ms , 6hz
   }
 
+  node->StopNode();
+
+  delete node;
+  node = nullptr;
+
   return 0;
+}
+
+int main(int argc, char **argv) {
+  
+  for (int i = 0; i < 10000; i++)
+  {
+    pressure_test(argc, argv);
+  }
+
+  while (1) {
+    sleep(1);
+  }
 }
 
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF

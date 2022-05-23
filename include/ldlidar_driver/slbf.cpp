@@ -20,12 +20,7 @@
  */
 #include "slbf.h"
 
-#include <math.h>
-
-#include <algorithm>
-#include <iostream>
-
-#include "lipkg.h"
+namespace ldlidar {
 
 /*!
         \brief      Set current speed
@@ -132,86 +127,96 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
     }
 
     if (sunshine_rate > 0.5 && confidence_avg < kConfidenceLow) {
-      // continue;
       for (auto& point : n) {
         point.distance = 0;
         point.intensity = 0;
       }
+      normal.insert(normal.end(), n.begin(), n.end());
+      continue;
     }
 
     if (enable_strict_policy_) {
       if (dis_avg > 8100 && confidence_avg < kConfidenceLow && n.size() < 1) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
-      }
-      /*else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() <
-      2)
-      {
-              continue;
-      }*/
-      else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() < 2) {
-        // continue;
-        for (auto& point : n) {
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
+      } else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() < 2) {
+         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       } else if (dis_avg > 4000 && confidence_avg < kConfidenceHigh && n.size() < 2) {
-        // continue;
-        for (auto& point : n) {
+         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       } else if (dis_avg > 300 /*&& confidence_avg < kConfidenceHigh */ && n.size() < 2) {
-        // continue;
-        for (auto& point : n) {
+         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
+
       if (dis_avg < 300 && confidence_avg < kConfidenceHigh && n.size() < 3) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
+
       if (dis_avg < 300 && sunshine_rate > 0.5 &&
           confidence_avg < kConfidenceMiddle && n.size() < 5) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
+
       if (dis_avg < 200 && sunshine_rate > 0.4 &&
           confidence_avg < kConfidenceMiddle && n.size() < 6) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
+
       if (dis_avg < 500 && sunshine_rate > 0.9 && n.size() < 3) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
+
       if (dis_avg < 200 && confidence_avg < kConfidenceMiddle && n.size() < 3) {
-        // continue;
         for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
+        normal.insert(normal.end(), n.begin(), n.end());
+        continue;
       }
     }
 
     double diff_avg = 0;
-    for (int i = 1; i < n.size(); i++) {
+    int n_size = (int)n.size();
+    for (int i = 1; i < n_size; i++) {
       if (n[i].angle > n[i - 1].angle) {
         diff_avg += fabs(n[i].angle - n[i - 1].angle);
       } else {
@@ -242,6 +247,8 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
         \retval
 */
 void Slbf::EnableStrictPolicy(bool enable) { enable_strict_policy_ = enable; }
+
+} // namespace ldlidar
 
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

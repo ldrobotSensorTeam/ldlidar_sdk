@@ -26,7 +26,11 @@
 #include <iostream>
 #include <vector>
 
-enum class LDVersion {
+namespace ldlidar {
+
+#define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
+
+enum class LDType {
   LD_14,  // Fourteen generation lidar
   NO_VER
 };
@@ -64,7 +68,7 @@ struct PointData {
 
 typedef std::vector<PointData> Points2D;
 
-#define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
+} // namespace ldlidar
 
 #endif  // _POINT_DATA_H_
 

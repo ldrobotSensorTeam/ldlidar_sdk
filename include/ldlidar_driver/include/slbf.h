@@ -21,11 +21,13 @@
 #ifndef __SLBF_H_
 #define __SLBF_H_
 
-#include <stdint.h>
+#include <math.h>
 
-#include <vector>
+#include <algorithm>
 
 #include "pointdata.h"
+
+namespace ldlidar {
 
 class Slbf {
  private:
@@ -49,6 +51,8 @@ class Slbf {
   void EnableStrictPolicy(bool enable);
   ~Slbf();
 };
+
+} // namespace ldlidar
 
 #endif  // __SLBF_H_
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF

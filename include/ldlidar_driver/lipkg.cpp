@@ -20,13 +20,7 @@
  */
 #include "lipkg.h"
 
-#include <math.h>
-#include <string.h>
-#include <sys/time.h>
-
-#include <algorithm>
-
-#include "slbf.h"
+namespace ldlidar {
 
 static const uint8_t CrcTable[256] = {
     0x00, 0x4d, 0x9a, 0xd7, 0x79, 0x34, 0xe3, 0xae, 0xf2, 0xbf, 0x68, 0x25,
@@ -61,13 +55,37 @@ uint8_t CalCRC8(const uint8_t *data, uint16_t data_len) {
   return crc;
 }
 
-LiPkg::LiPkg(LDVersion ld_version)
-    : timestamp_(0),
-      speed_(0),
-      error_times_(0),
+LiPkg::LiPkg()
+    : sdk_pack_version_("2.2.2"),
+      ld_typenumber_(LDType::NO_VER),
+      ld_lidarstatus_(LidarStatus::NORMAL),
+      to_right_hand_(false),
       is_frame_ready_(false),
-      ld_lidarstatus_(LidarStatus::NORMAL){
-  ld_version_ = ld_version;
+      is_noise_filter_(false),
+      timestamp_(0),
+      speed_(0),
+      error_times_(0) {
+
+}
+
+LiPkg::~LiPkg() {
+
+}
+
+std::string LiPkg::GetSdkPackVersionNum(void) {
+  return sdk_pack_version_;
+}
+
+void LiPkg::SetProductType(LDType typenumber) {
+  ld_typenumber_ = typenumber;
+}
+
+void LiPkg::SetLaserScanDir(bool is_to_right_hand) {
+  to_right_hand_ = is_to_right_hand;
+}
+
+void LiPkg::SetNoiseFilter(bool is_enable) {
+  is_noise_filter_ = is_enable;
 }
 
 bool LiPkg::AnalysisOne(uint8_t byte) {
@@ -142,8 +160,6 @@ bool LiPkg::Parse(const uint8_t *data, long len) {
             pkg_timestamp_delta_ms = timestamp_ - last_pkg_timestamp;
           }
         }
-        // std::cout << "[ldrobot] timestamp_ms: " << timestamp_ << std::endl;
-        // std::cout << "[ldrobot] delta_pkg_timestamp_ms: " << pkg_timestamp_delta_ms << std::endl;
         uint64_t pkg_end_point_timestamp_ns = GetTime();
         uint64_t pkg_timestamp_delta_ms_to_ns = pkg_timestamp_delta_ms*1000000; 
         uint64_t pkg_start_point_timestamp_ns = pkg_end_point_timestamp_ns - pkg_timestamp_delta_ms_to_ns;
@@ -152,7 +168,6 @@ bool LiPkg::Parse(const uint8_t *data, long len) {
         uint32_t diff =((uint32_t)pkg.end_angle + 36000 - (uint32_t)pkg.start_angle) % 36000;
         float step = diff / (POINT_PER_PACK - 1) / 100.0;
         float start = (double)pkg.start_angle / 100.0;
-        float end = (double)(pkg.end_angle % 36000) / 100.0;
         PointData data;
         for (int i = 0; i < POINT_PER_PACK; i++) {
           data.distance = pkg.point[i].distance;
@@ -186,26 +201,23 @@ bool LiPkg::AssemblePacket() {
         return false;
       }
       data.insert(data.begin(), frame_tmp_.begin(), frame_tmp_.begin() + count);
-      // std::cout << "[ldrobot] transform forward: " << data.size() << std::endl;
 
-      SlTransform trans(ld_version_);
+      SlTransform trans(ld_typenumber_, to_right_hand_);
       data = trans.Transform(data); // transform raw data to stantard data  
       std::sort(data.begin(), data.end(), [](PointData a, PointData b) { return a.angle < b.angle;});
 
-      // std::cout << "[ldrobot] filter forward: " << data.size() << std::endl;
-      Slbf sb(speed_);
-      tmp = sb.NearFilter(data); // filter noise point
-      // std::cout << "[ldrobot] filter backward: " << tmp.size() << std::endl;
-
+      if (is_noise_filter_) {
+        Slbf sb(speed_);
+        tmp = sb.NearFilter(data); // filter noise point
+      } else {
+        tmp = data;
+      }
+      
       std::sort(tmp.begin(), tmp.end(), [](PointData a, PointData b) { return a.angle < b.angle; });
       if (tmp.size() > 0) {
-        lidar_frame_data_ = tmp;
+        SetLaserScanData(tmp);
         AnalysisLidarIsOcclusion(tmp);
-        double lidar_spin_speed_hz = GetSpeed();
-        float start_angle = lidar_frame_data_.front().angle;
-        if ((lidar_spin_speed_hz >= 5.8) && (lidar_spin_speed_hz <= 6.2) && (start_angle < 1)){
-          SetFrameReady();
-        }
+        SetFrameReady();
         frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
         return true;
       }
@@ -226,7 +238,7 @@ void LiPkg::CommReadCallBack(const char *byte, size_t len) {
 bool LiPkg::GetLaserScanData(Points2D& out) {
   if (IsFrameReady()) {
     ResetFrameReady();
-    out = lidar_frame_data_; 
+    out = GetLaserScanData();
     return true;
   } else {
     return false;
@@ -234,7 +246,7 @@ bool LiPkg::GetLaserScanData(Points2D& out) {
 }
 
 double LiPkg::GetSpeed(void) { 
-  return speed_ / 360.0;  // unit  is Hz
+  return (speed_ / 360.0);  // unit  is Hz
 }
 
 LidarStatus LiPkg::GetLidarStatus(void) {
@@ -242,21 +254,28 @@ LidarStatus LiPkg::GetLidarStatus(void) {
 }
 
 bool LiPkg::IsFrameReady(void) {
+  std::lock_guard<std::mutex> lg(mutex_lock1_);
   return is_frame_ready_; 
 }
 
 void LiPkg::ResetFrameReady(void) {
-  {
-    std::lock_guard<std::mutex> _(mutex_lock);
-    is_frame_ready_ = false;
-  }
+  std::lock_guard<std::mutex> lg(mutex_lock1_);
+  is_frame_ready_ = false;
 }
 
 void LiPkg::SetFrameReady(void) {
-  {
-    std::lock_guard<std::mutex> _(mutex_lock);
-    is_frame_ready_ = true;
-  }
+  std::lock_guard<std::mutex> lg(mutex_lock1_);
+  is_frame_ready_ = true;
+}
+
+void LiPkg::SetLaserScanData(Points2D& src) {
+  std::lock_guard<std::mutex> lg(mutex_lock2_);
+  lidar_frame_data_ = src;
+}
+
+Points2D LiPkg::GetLaserScanData(void) {
+  std::lock_guard<std::mutex> lg(mutex_lock2_);
+  return lidar_frame_data_; 
 }
 
 long LiPkg::GetErrorTimes(void) {
@@ -284,10 +303,8 @@ void LiPkg::AnalysisLidarIsBlocking(uint16_t lidar_speed_val){
   }
   if (judge_block_cnt >= 5) {
     ld_lidarstatus_ = LidarStatus::BLOCKING;
-    // std::cout << "[ldrobot] ERROR: lidar blocking" << std::endl;
   } else {
     ld_lidarstatus_ = LidarStatus::NORMAL;
-    // std::cout << "[ldrobot] lidar spin normal" << std::endl;
   }
   last_speed = curr_speed;
 }
@@ -296,21 +313,22 @@ void LiPkg::AnalysisLidarIsOcclusion(Points2D& lidar_data) {
   if (ld_lidarstatus_ == LidarStatus::BLOCKING) {
     return;
   }
+
   uint16_t no_occlusion_count = 0;
   for (auto point: lidar_data) {
     if (point.distance != 0) {
       no_occlusion_count++;
     }
   }
-  // std::cout << "[ldrobot] count: " << count << std::endl;
+
   if (no_occlusion_count <= 5) {
     ld_lidarstatus_ = LidarStatus::OCCLUSION;
-    // std::cout << "[ldrobot] ERROR: lidar occlusion" << std::endl;
   } else {
     ld_lidarstatus_ = LidarStatus::NORMAL;
-    // std::cout << "[ldrobot] lidar is normal" << std::endl;
   }
 }
+
+}  // namespace ldlidar
 
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

@@ -21,36 +21,29 @@
 #ifndef __LDLIDAR_NODE_H__
 #define __LDLIDAR_NODE_H__
 
-#include <stdio.h>
-#include <unistd.h>
-
-#include <iostream>
-
-#include "cmd_interface_linux.h"
 #include "lipkg.h"
 
 namespace ldlidar {
 
 class LDlidarNode {
   private:
-  LDVersion product_name_;
-  std::string serial_port_name_;
   LiPkg* comm_pkg_;
   CmdInterfaceLinux* comm_serial_;
-  bool is_init_flag_;
   bool is_start_flag;
 
   public:
-  LDlidarNode(LDVersion product_name, std::string serial_port_name);
+  LDlidarNode();
   ~LDlidarNode();
-  bool StartNode(void);
+  bool StartNode(LDType product_name, std::string serial_port_name, bool to_right_hand, bool is_filter);
   bool StopNode(void);
   bool GetLaserScan(Points2D& output); 
   bool GetLidarSpinFreq(double& spin_hz);
   bool GetLidarWorkStatus(LidarStatus& status);
+  std::string GetSdkVersionNum(void);
 };
 
-}
+} // namespace ldlidar
+
 #endif // __LDLIDAR_NODE_H__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

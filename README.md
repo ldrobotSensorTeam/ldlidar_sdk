@@ -32,24 +32,21 @@ $ sudo chmod 777 /dev/ttyUSB0
 ## 2. 编译
 
 ```bash
-$ mkdir build # 若工程目录下不存在build文件夹则需创建
-$ cd build
-$ cmake ../
-$ make
+$ cd ~/ldlidar_ws/ldlidar_sl_sdk
+$ ./auto_build.sh
 ```
 
 ## 3. 运行
-- 产品型号为LDROBOT LiDAR LD14
-  ``` bash
-  $ ./ldlidar_sl LD14 <serial_number>
-  # 例如 ./ldlidar_sl LD14 /dev/ttyS0
-  ```
+``` bash
+$ ./build/ldlidar_sl <serial_number>
+# 例如 ./build/ldlidar_sl /dev/ttyS0
+```
 
 # Instructions
 > This SDK is only applicable to the LiDAR products sold by Shenzhen LDROBOT Co., LTD. The product models are :
 > - LDROBOT LiDAR LD14
 
-## 0. get LiDAR Linux SDK
+## step 0. get LiDAR Linux SDK
 ```bash
 $ cd ~
 
@@ -77,16 +74,12 @@ $ sudo chmod 777 /dev/ttyUSB0
 ## step 2: build
 
 ``` bash
-$ mkdir build # If the build folder does not exist in the project directory, create one
-$ cd build
-$ cmake ../
-$ make
+$ cd ~/ldlidar_ws/ldlidar_sl_sdk
+$ ./auto_build.sh
 ```
 
 ## step 3: run
-
- - This product is LDROBOT LiDAR LD14
-  ``` bash
-  $ ./ldlidar_sl LD14 <serial_number>
-  # 例如 ./ldlidar_sl LD14 /dev/ttyS0
-  ```
+``` bash
+$ ./build/ldlidar_sl <serial_number>
+# 例如 ./build/ldlidar_sl /dev/ttyS0
+```
