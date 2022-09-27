@@ -1,6 +1,6 @@
 /**
  * @file pointdata.h
- * @author LDRobot (marketing1@ldrobot.com)
+ * @author LDRobot (support@ldrobot.com)
  * @brief  lidar point data structure
  *         This code is only applicable to LDROBOT products
  * sold by Shenzhen LDROBOT Co., LTD

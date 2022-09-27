@@ -1,6 +1,6 @@
 /**
  * @file lipkg.cpp
- * @author LDRobot (marketing1@ldrobot.com)
+ * @author LDRobot (support@ldrobot.com)
  * @brief  LiDAR data protocol processing App
  *         This code is only applicable to LDROBOT LiDAR LD00 LD03 LD08 LD14
  * products sold by Shenzhen LDROBOT Co., LTD
@@ -56,7 +56,7 @@ uint8_t CalCRC8(const uint8_t *data, uint16_t data_len) {
 }
 
 LiPkg::LiPkg()
-    : sdk_pack_version_("2.2.2"),
+    : sdk_pack_version_("2.2.3"),
       ld_typenumber_(LDType::NO_VER),
       ld_lidarstatus_(LidarStatus::NORMAL),
       to_right_hand_(false),

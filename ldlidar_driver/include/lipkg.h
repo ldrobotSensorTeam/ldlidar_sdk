@@ -1,6 +1,6 @@
 /**
  * @file lipkg.h
- * @author LDRobot (marketing1@ldrobot.com)
+ * @author LDRobot (support@ldrobot.com)
  * @brief  LiDAR data protocol processing App
  *         This code is only applicable to LDROBOT LiDAR LD00 LD03 LD08 LD14
  * products sold by Shenzhen LDROBOT Co., LTD
