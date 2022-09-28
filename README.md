@@ -38,8 +38,8 @@ $ ./auto_build.sh
 
 ## 3. 运行
 ``` bash
-$ ./build/ldlidar_sl <serial_number>
-# 例如 ./build/ldlidar_sl /dev/ttyS0
+$ ./build/ldlidar_sl_node <serial_number>
+# 例如 ./build/ldlidar_sl_node /dev/ttyS0
 ```
 
 # Instructions
@@ -80,6 +80,6 @@ $ ./auto_build.sh
 
 ## step 3: run
 ``` bash
-$ ./build/ldlidar_sl <serial_number>
-# 例如 ./build/ldlidar_sl /dev/ttyS0
+$ ./build/ldlidar_sl_node <serial_number>
+# example ./build/ldlidar_sl_node /dev/ttyS0
 ```

@@ -26,18 +26,18 @@
 #include <algorithm>
 #include <vector>
 
-#include "pointdata.h"
+#include "ldlidar_datatype.h"
 
 namespace ldlidar {
 
 class SlTransform {
- private:
+private:
   bool to_right_hand_ = true;
   double offset_x_;
   double offset_y_;
   LDType version_;
 
- public:
+public:
   SlTransform(LDType version, bool to_right_hand = false);
   Points2D Transform(const Points2D &data);
   ~SlTransform();

@@ -19,74 +19,100 @@
  * limitations under the License.
  */
 
-#include "ldlidar_node.h"
+#include "ldlidar_driver.h"
+
+uint64_t GetTimestamp(void) {
+  std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
+    std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
+  auto tmp = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
+  return ((uint64_t)tmp.count());
+}
 
 int main(int argc, char **argv) {
   
   if (argc != 2) {
-    std::cerr << "[ldrobot] cmd error" << std::endl;
-    std::cerr << "[ldrobot] please input: ./ldlidar_sl <serial_number>" << std::endl;
-    std::cerr << "[ldrobot] example:" << std::endl;
-    std::cerr << "./ldlidar_sl /dev/ttyUSB*" << std::endl;
-    std::cerr << "or" << std::endl;
-    std::cerr << "./ldlidar_sl /dev/ttyS*" << std::endl;
+    LDS_LOG_INFO("cmd error","");
+    LDS_LOG_INFO("please input: ./ldlidar_sl_node <serial_number>","");
+    LDS_LOG_INFO("example:","");
+    LDS_LOG_INFO("./ldlidar_sl_node /dev/ttyUSB0","");
+    LDS_LOG_INFO("or","");
+    LDS_LOG_INFO("./ldlidar_sl_node /dev/ttyS0","");
+    exit(EXIT_FAILURE);
     exit(EXIT_FAILURE);
   }
   
   std::string port_name(argv[1]);
   
-  ldlidar::LDlidarNode* node = new ldlidar::LDlidarNode();
+  ldlidar::LDLidarDriver* node = new ldlidar::LDLidarDriver();
   
-  std::cout << "[ldrobot] SDK Pack Version is " << node->GetSdkVersionNum() << std::endl;
-  if (node->StartNode(ldlidar::LDType::LD_14, port_name, true, true)) {
-    std::cout << "[ldrobot] ldldiar node start is success" << std::endl;
+  LDS_LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
+
+  node->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
+
+  node->EnableFilterAlgorithnmProcess(true);
+
+  if (node->Start(ldlidar::LDType::LD_14, port_name)) {
+    LDS_LOG_INFO("ldldiar node start is success","");
   } else {
-    std::cerr << "[ldrobot] ERROR: lidar node start is fail" << std::endl;
+    LDS_LOG_ERROR("ldlidar node start is fail","");
     exit(EXIT_FAILURE);
   }
 
-  ldlidar::Points2D laser_scan;
-  double lidar_spin_freq;
-  ldlidar::LidarStatus lidar_status;
-  auto last_time = std::chrono::steady_clock::now();
+  if (node->WaitLidarCommConnect(3500)) {
+    LDS_LOG_INFO("ldlidar communication is normal.","");
+  } else {
+    LDS_LOG_ERROR("ldlidar communication is abnormal.","");
+    exit(EXIT_FAILURE);
+  }
+  
+  ldlidar::Points2D laser_scan_points;
+  while (ldlidar::LDLidarDriver::IsOk()) {
+    switch (node->GetLaserScanData(laser_scan_points, 1500)){
+      case ldlidar::LidarStatus::NORMAL: {
+        double lidar_spin_freq = 0;
+        node->GetLidarSpinFreq(lidar_spin_freq);
 
-  while (1) {
-    if (node->GetLidarWorkStatus(lidar_status)) {
-      switch (lidar_status){
-        case ldlidar::LidarStatus::NORMAL:
-          if (node->GetLaserScan(laser_scan)) {
-            last_time = std::chrono::steady_clock::now();
-            // get lidar normal data
-            if (node->GetLidarSpinFreq(lidar_spin_freq)) {
-              std::cout << "[ldrobot] speed(Hz): " << lidar_spin_freq << std::endl;
-            }
-            for (auto ele : laser_scan) {
-              std::cout << "[ldrobot] angle: " << ele.angle << " "
-                        << "distance(mm): " << ele.distance << " "
-                        << "intensity: " << (int)ele.intensity << " "
-                        << "stamp(ns): " << ele.stamp << std::endl;
-            }
-          }
-          break;
-        case ldlidar::LidarStatus::BLOCKING:
-          std::cout << "lidar status is blocking" << std::endl;
-          break;
-        case ldlidar::LidarStatus::OCCLUSION:
-          std::cout << "lidar status is occlusion" << std::endl;
-          break;
-        default:
-          break;
+        LDS_LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%ld, stamp_back:%ld",
+            lidar_spin_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
+        
+        for (auto point : laser_scan_points) {
+          LDS_LOG_INFO("stamp(ns):%ldangle:%f,distance(mm):%d,intensity:%d", 
+              point.stamp, point.angle, point.distance, point.intensity);
+        }
+        break;
       }
+      case ldlidar::LidarStatus::ERROR: {
+        uint8_t errcode = node->GetLidarErrorCode();
+        LDS_LOG_ERROR("ldlidar feedback errcode:%d",errcode);
+        if (LIDAR_ERROR_BLOCKING == errcode) {
+          LDS_LOG_WARN("ldlidar blocking","");
+        } else if (LIDAR_ERROR_OCCLUSION == errcode) {
+          LDS_LOG_WARN("ldlidar occlusion","");
+        } else if (LIDAR_ERROR_BLOCKING_AND_OCCLUSION == errcode) {
+          LDS_LOG_WARN("ldlidar blocking and occlusion","");
+        }
+        node->Stop();
+        break;
+      }
+      case ldlidar::LidarStatus::DATA_TIME_OUT: {
+        LDS_LOG_ERROR("ldlidar point cloud data publish time out, please check your lidar device.","");
+        node->Stop();
+        break;
+      }
+      case ldlidar::LidarStatus::DATA_WAIT: {
+        break;
+      }
+      case ldlidar::LidarStatus::STOP: {
+        break;
+      }
+      default:
+        break;
     }
 
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-last_time).count() > 1000) {
-			std::cout << "[ldrobot] lidar pub data is time out, please check lidar device" << std::endl;
-			exit(EXIT_FAILURE);
-		}
     usleep(1000*166);  // sleep 166ms , 6hz
   }
 
-  node->StopNode();
+  node->Stop();
 
   delete node;
   node = nullptr;

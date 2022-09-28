@@ -25,12 +25,12 @@
 
 #include <algorithm>
 
-#include "pointdata.h"
+#include "ldlidar_datatype.h"
 
 namespace ldlidar {
 
 class Slbf {
- private:
+private:
   const int kConfidenceHigh = 200;
   const int kConfidenceMiddle = 150;
   const int kConfidenceLow = 92;
@@ -45,7 +45,7 @@ class Slbf {
   Slbf(const Slbf &) = delete;
   Slbf &operator=(const Slbf &) = delete;
 
- public:
+public:
   Slbf(int speed, bool strict_policy = true);
   Points2D NearFilter(const Points2D &tmp) const;
   void EnableStrictPolicy(bool enable);

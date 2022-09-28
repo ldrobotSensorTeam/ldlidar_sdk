@@ -55,16 +55,16 @@ uint8_t CalCRC8(const uint8_t *data, uint16_t data_len) {
   return crc;
 }
 
-LiPkg::LiPkg()
-    : sdk_pack_version_("2.2.3"),
-      ld_typenumber_(LDType::NO_VER),
-      ld_lidarstatus_(LidarStatus::NORMAL),
-      to_right_hand_(false),
-      is_frame_ready_(false),
-      is_noise_filter_(false),
-      timestamp_(0),
-      speed_(0),
-      error_times_(0) {
+LiPkg::LiPkg(): typenumber_(LDType::NO_VER),
+  lidarstatus_(LidarStatus::NORMAL),
+  lidarerrorcode_(LIDAR_NO_ERROR),
+  is_frame_ready_(false),
+  is_noise_filter_(false),
+  timestamp_(0),
+  speed_(0),
+  get_timestamp_(nullptr),
+  is_poweron_comm_normal_(false),
+  poweron_datapkg_count_(0) {
 
 }
 
@@ -72,20 +72,16 @@ LiPkg::~LiPkg() {
 
 }
 
-std::string LiPkg::GetSdkPackVersionNum(void) {
-  return sdk_pack_version_;
-}
-
 void LiPkg::SetProductType(LDType typenumber) {
-  ld_typenumber_ = typenumber;
-}
-
-void LiPkg::SetLaserScanDir(bool is_to_right_hand) {
-  to_right_hand_ = is_to_right_hand;
+  typenumber_ = typenumber;
 }
 
 void LiPkg::SetNoiseFilter(bool is_enable) {
   is_noise_filter_ = is_enable;
+}
+
+void LiPkg::RegisterTimestampGetFunctional(std::function<uint64_t(void)> timestamp_handle) {
+  get_timestamp_ = timestamp_handle;
 }
 
 bool LiPkg::AnalysisOne(uint8_t byte) {
@@ -118,14 +114,13 @@ bool LiPkg::AnalysisOne(uint8_t byte) {
     case DATA:
       tmp[count++] = byte;
       if (count >= pkg_count) {
-        memcpy((uint8_t *)&pkg, tmp, pkg_count);
-        uint8_t crc = CalCRC8((uint8_t *)&pkg, pkg_count - 1);
+        memcpy((uint8_t *)&datapkg_, tmp, pkg_count);
+        uint8_t crc = CalCRC8((uint8_t *)&datapkg_, pkg_count - 1);
         state = HEADER;
         count = 0;
-        if (crc == pkg.crc8) {
+        if (crc == datapkg_.crc8) {
           return true;
         } else {
-          error_times_++;
           return false;
         }
       }
@@ -140,46 +135,45 @@ bool LiPkg::AnalysisOne(uint8_t byte) {
 bool LiPkg::Parse(const uint8_t *data, long len) {
   for (int i = 0; i < len; i++) {
     if (AnalysisOne(data[i])) {
+      poweron_datapkg_count_++;
+      if (poweron_datapkg_count_ >= 2) {
+        poweron_datapkg_count_ = 0;
+        is_poweron_comm_normal_ = true;
+      }
+      
+      static uint64_t last_pkg_timestamp = 0;
+      speed_ = datapkg_.speed;
+      timestamp_ = datapkg_.timestamp;
       // judge block
-      AnalysisLidarIsBlocking(pkg.speed);
+      AnalysisLidarIsBlocking(datapkg_.speed);
       // parse a package is success
-      double diff = (pkg.end_angle / 100 - pkg.start_angle / 100 + 360) % 360;
-      if (diff > ((double)pkg.speed * POINT_PER_PACK / 2300 * 1.5)) {
-        error_times_++;
-      } else {
-        static uint16_t last_pkg_timestamp = 0;
-        speed_ = pkg.speed;
-        timestamp_ = pkg.timestamp;
-        uint16_t pkg_timestamp_delta_ms;
-        if (last_pkg_timestamp == 0){
-          pkg_timestamp_delta_ms = 5;
-        } else {
-          if ((timestamp_ - last_pkg_timestamp) < 0) {
-            pkg_timestamp_delta_ms = 30000 + timestamp_ - last_pkg_timestamp;
-          } else {
-            pkg_timestamp_delta_ms = timestamp_ - last_pkg_timestamp;
-          }
-        }
-        uint64_t pkg_end_point_timestamp_ns = GetTime();
-        uint64_t pkg_timestamp_delta_ms_to_ns = pkg_timestamp_delta_ms*1000000; 
-        uint64_t pkg_start_point_timestamp_ns = pkg_end_point_timestamp_ns - pkg_timestamp_delta_ms_to_ns;
-        double pkg_timestamp_step_ns = pkg_timestamp_delta_ms_to_ns / static_cast<double>(POINT_PER_PACK - 1);
+      double diff = (datapkg_.end_angle / 100 - datapkg_.start_angle / 100 + 360) % 360;
+      if (diff <= ((double)datapkg_.speed * POINT_PER_PACK / 2300 * 1.5)) {
         
-        uint32_t diff =((uint32_t)pkg.end_angle + 36000 - (uint32_t)pkg.start_angle) % 36000;
+        if (0 == last_pkg_timestamp) {
+          last_pkg_timestamp = get_timestamp_();
+          continue;
+        }
+        uint64_t current_pack_stamp = get_timestamp_();
+        int pkg_point_number = POINT_PER_PACK;
+        double pack_stamp_point_step =  
+            static_cast<double>(current_pack_stamp - last_pkg_timestamp) / static_cast<double>(pkg_point_number - 1);
+        
+        uint32_t diff =((uint32_t)datapkg_.end_angle + 36000 - (uint32_t)datapkg_.start_angle) % 36000;
         float step = diff / (POINT_PER_PACK - 1) / 100.0;
-        float start = (double)pkg.start_angle / 100.0;
+        float start = (double)datapkg_.start_angle / 100.0;
         PointData data;
         for (int i = 0; i < POINT_PER_PACK; i++) {
-          data.distance = pkg.point[i].distance;
+          data.distance = datapkg_.point[i].distance;
           data.angle = start + i * step;
           if (data.angle >= 360.0) {
             data.angle -= 360.0;
           }
-          data.intensity = pkg.point[i].intensity;
-          data.stamp = static_cast<uint64_t>(pkg_start_point_timestamp_ns + (pkg_timestamp_step_ns * i));
+          data.intensity = datapkg_.point[i].intensity;
+          data.stamp = static_cast<uint64_t>(last_pkg_timestamp + (pack_stamp_point_step * i));
           frame_tmp_.push_back(PointData(data.angle, data.distance, data.intensity, data.stamp));
         }
-        last_pkg_timestamp = timestamp_;
+        last_pkg_timestamp = current_pack_stamp; //// update last pkg timestamp
       }
     }
   }
@@ -192,37 +186,67 @@ bool LiPkg::AssemblePacket() {
   Points2D tmp, data;
   int count = 0;
 
+  if (speed_ <= 0) {
+    frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.end());
+    return false;
+  }
+
   for (auto n : frame_tmp_) {
     // wait for enough data, need enough data to show a circle
 	// enough data has been obtained
     if ((n.angle < 20.0) && (last_angle > 340.0)) {
       if ((count * GetSpeed()) > (kPointFrequence * 1.4)) {
-        frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count - 1);
+        if (count >= (int)frame_tmp_.size()) {
+          frame_tmp_.clear();
+        } else {
+          frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
+        }
         return false;
       }
       data.insert(data.begin(), frame_tmp_.begin(), frame_tmp_.begin() + count);
 
-      SlTransform trans(ld_typenumber_, to_right_hand_);
+      SlTransform trans(typenumber_);
       data = trans.Transform(data); // transform raw data to stantard data  
-      std::sort(data.begin(), data.end(), [](PointData a, PointData b) { return a.angle < b.angle;});
-
+    
       if (is_noise_filter_) {
+        std::sort(data.begin(), data.end(), [](PointData a, PointData b) { return a.angle < b.angle;});
         Slbf sb(speed_);
         tmp = sb.NearFilter(data); // filter noise point
       } else {
         tmp = data;
       }
       
-      std::sort(tmp.begin(), tmp.end(), [](PointData a, PointData b) { return a.angle < b.angle; });
+      std::sort(tmp.begin(), tmp.end(), [](PointData a, PointData b) { return a.stamp < b.stamp; });
       if (tmp.size() > 0) {
+        static bool first_flag = false;
         SetLaserScanData(tmp);
         AnalysisLidarIsOcclusion(tmp);
-        SetFrameReady();
-        frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
+
+        if (!first_flag) {
+          first_flag = true;
+        } else {
+          SetFrameReady();
+        }
+
+        if (count >= (int)frame_tmp_.size()) {
+          frame_tmp_.clear();
+        } else {
+          frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
+        }
         return true;
       }
     }
     count++;
+
+    if ((count * GetSpeed()) > (kPointFrequence * 2)) {
+      if (count >= (int)frame_tmp_.size()) {
+        frame_tmp_.clear();
+      } else {
+        frame_tmp_.erase(frame_tmp_.begin(), frame_tmp_.begin() + count);
+      }
+      return false;
+    }
+
     last_angle = n.angle;
   }
 
@@ -250,7 +274,28 @@ double LiPkg::GetSpeed(void) {
 }
 
 LidarStatus LiPkg::GetLidarStatus(void) {
-  return ld_lidarstatus_;
+  return lidarstatus_;
+}
+
+uint8_t LiPkg::GetLidarErrorCode(void) {
+  return lidarerrorcode_;
+}
+
+bool LiPkg::GetLidarPowerOnCommStatus(void) {
+  if (is_poweron_comm_normal_) {
+    is_poweron_comm_normal_ = false;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void LiPkg::SetLidarStatus(LidarStatus status) {
+  lidarstatus_ = status;
+}
+
+void LiPkg::SetLidarErrorCode(uint8_t errorcode) {
+  lidarerrorcode_ = errorcode;
 }
 
 bool LiPkg::IsFrameReady(void) {
@@ -278,17 +323,6 @@ Points2D LiPkg::GetLaserScanData(void) {
   return lidar_frame_data_; 
 }
 
-long LiPkg::GetErrorTimes(void) {
-  return error_times_; 
-}
-
-uint64_t LiPkg::GetTime(void) {
-  //! System time when first range was measured in nanoseconds
-  struct timeval timeofday;
-  gettimeofday(&timeofday, NULL);
-  return (static_cast<uint64_t>(timeofday.tv_sec) * 1000000000LL + static_cast<uint64_t>(timeofday.tv_usec) * 1000LL);
-}
-
 void LiPkg::AnalysisLidarIsBlocking(uint16_t lidar_speed_val){
   static int16_t judge_block_cnt = 0;
   static uint16_t last_speed = 0;
@@ -302,17 +336,16 @@ void LiPkg::AnalysisLidarIsBlocking(uint16_t lidar_speed_val){
     }
   }
   if (judge_block_cnt >= 5) {
-    ld_lidarstatus_ = LidarStatus::BLOCKING;
+    SetLidarStatus(LidarStatus::ERROR);
+    SetLidarErrorCode(LIDAR_ERROR_BLOCKING);
   } else {
-    ld_lidarstatus_ = LidarStatus::NORMAL;
+    SetLidarStatus(LidarStatus::NORMAL);
+    SetLidarErrorCode(LIDAR_NO_ERROR);
   }
   last_speed = curr_speed;
 }
 
 void LiPkg::AnalysisLidarIsOcclusion(Points2D& lidar_data) {
-  if (ld_lidarstatus_ == LidarStatus::BLOCKING) {
-    return;
-  }
 
   uint16_t no_occlusion_count = 0;
   for (auto point: lidar_data) {
@@ -322,9 +355,15 @@ void LiPkg::AnalysisLidarIsOcclusion(Points2D& lidar_data) {
   }
 
   if (no_occlusion_count <= 5) {
-    ld_lidarstatus_ = LidarStatus::OCCLUSION;
+    SetLidarStatus(LidarStatus::ERROR);
+    if (GetLidarErrorCode() == LIDAR_ERROR_BLOCKING) {
+      SetLidarErrorCode(LIDAR_ERROR_BLOCKING_AND_OCCLUSION);
+    } else {
+      SetLidarErrorCode(LIDAR_ERROR_OCCLUSION);
+    }
   } else {
-    ld_lidarstatus_ = LidarStatus::NORMAL;
+    SetLidarStatus(LidarStatus::NORMAL);
+    SetLidarErrorCode(LIDAR_NO_ERROR);
   }
 }
 

@@ -44,10 +44,10 @@ namespace asmtermios {
 
 namespace ldlidar {
 
-class CmdInterfaceLinux {
- public:
-  CmdInterfaceLinux();
-  ~CmdInterfaceLinux();
+class SerialInterfaceLinux {
+public:
+  SerialInterfaceLinux();
+  ~SerialInterfaceLinux();
   // open serial port
   bool Open(std::string &port_name, uint32_t com_baudrate);  
   // close serial port
@@ -63,7 +63,7 @@ class CmdInterfaceLinux {
   // whether open
   bool IsOpened() { return is_cmd_opened_.load(); };  
 
- private:
+private:
   std::thread *rx_thread_;
   long long rx_count_;
   int32_t com_handle_;

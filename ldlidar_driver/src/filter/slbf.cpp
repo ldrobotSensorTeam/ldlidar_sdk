@@ -144,21 +144,21 @@ Points2D Slbf::NearFilter(const Points2D &data) const {
         normal.insert(normal.end(), n.begin(), n.end());
         continue;
       } else if (dis_avg > 6000 && confidence_avg < kConfidenceLow && n.size() < 2) {
-         for (auto& point : n) {
+        for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
         normal.insert(normal.end(), n.begin(), n.end());
         continue;
       } else if (dis_avg > 4000 && confidence_avg < kConfidenceHigh && n.size() < 2) {
-         for (auto& point : n) {
+        for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
         normal.insert(normal.end(), n.begin(), n.end());
         continue;
       } else if (dis_avg > 300 /*&& confidence_avg < kConfidenceHigh */ && n.size() < 2) {
-         for (auto& point : n) {
+        for (auto& point : n) {
           point.distance = 0;
           point.intensity = 0;
         }
