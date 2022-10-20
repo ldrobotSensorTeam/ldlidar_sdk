@@ -67,16 +67,17 @@ int main(int argc, char **argv) {
   
   ldlidar::Points2D laser_scan_points;
   while (ldlidar::LDLidarDriver::IsOk()) {
+
     switch (node->GetLaserScanData(laser_scan_points, 1500)){
       case ldlidar::LidarStatus::NORMAL: {
         double lidar_spin_freq = 0;
         node->GetLidarSpinFreq(lidar_spin_freq);
 
-        LDS_LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%ld, stamp_back:%ld",
+        LDS_LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%lu, stamp_back:%lu",
             lidar_spin_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
         
         for (auto point : laser_scan_points) {
-          LDS_LOG_INFO("stamp(ns):%ldangle:%f,distance(mm):%d,intensity:%d", 
+          LDS_LOG_INFO("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
               point.stamp, point.angle, point.distance, point.intensity);
         }
         break;
