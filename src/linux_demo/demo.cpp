@@ -72,13 +72,21 @@ int main(int argc, char **argv) {
       case ldlidar::LidarStatus::NORMAL: {
         double lidar_spin_freq = 0;
         node->GetLidarSpinFreq(lidar_spin_freq);
-
+#ifdef __LP64__
         LDS_LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%lu, stamp_back:%lu",
             lidar_spin_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
-        
+#else
+        LDS_LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%llu, stamp_back:%llu",
+            lidar_spin_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
+#endif
         for (auto point : laser_scan_points) {
+#ifdef __LP64__
           LDS_LOG_INFO("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
               point.stamp, point.angle, point.distance, point.intensity);
+#else
+          LDS_LOG_INFO("stamp(ns):%llu,angle:%f,distance(mm):%d,intensity:%d", 
+              point.stamp, point.angle, point.distance, point.intensity);
+#endif
         }
         break;
       }

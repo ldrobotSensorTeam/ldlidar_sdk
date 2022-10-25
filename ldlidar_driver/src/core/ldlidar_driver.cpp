@@ -24,7 +24,7 @@ namespace ldlidar {
 
 bool LDLidarDriver::is_ok_ = false;
 
-LDLidarDriver::LDLidarDriver() : sdk_pack_version_("3.0.1"),
+LDLidarDriver::LDLidarDriver() : sdk_pack_version_("3.0.2"),
   is_start_flag_(false),
   comm_pkg_(new LiPkg()),
   comm_serial_(new SerialInterfaceLinux()){
