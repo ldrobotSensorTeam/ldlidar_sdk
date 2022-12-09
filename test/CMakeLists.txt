@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ldlidar_sl)
+project(test)
 
 if(${CMAKE_BUILD_TYPE} MATCHES  "Release")
   #set(CMAKE_BUILD_TYPE "Release") 
@@ -15,6 +15,12 @@ else()
   message(STATUS "optional:-std=c++11 -Wall -Wextra -Wpedantic -g2 -ggdb")
 endif()
 
+if(${USE_WIRINGPI_LIB} MATCHES "ON")
+  add_definitions(-D"USE_WIRINGPI")
+  message(STATUS "-- #define USE_WIRINGPI")
+endif()
+
+
 ###########
 ## Build ##
 ###########
@@ -22,20 +28,18 @@ endif()
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/include/core/
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/include/dataprocess/
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/include/filter/
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/include/logger/
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/include/serialcom/
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include/
 )
 
-file(GLOB  LDLIDAR_DRI_CORE ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/src/core/*.cpp)
-file(GLOB  LDLIDAR_DRI_DATARPC ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/src/dataprocess/*.cpp)
-file(GLOB  LDLIDAR_DRI_FILTER ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/src/filter/*.cpp)
-file(GLOB  LDLIDAR_DRI_LOGGER ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/src/logger/*.cpp)
-file(GLOB  LDLIDAR_DRI_SERIAL ${CMAKE_CURRENT_SOURCE_DIR}/../../ldlidar_driver/src/serialcom/*.cpp)
+file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/*.cpp)
+file(GLOB  LDLIDAR_DRI_DATARPC ${CMAKE_CURRENT_SOURCE_DIR}/../src/dataprocess/*.cpp)
+file(GLOB  LDLIDAR_DRI_FILTER  ${CMAKE_CURRENT_SOURCE_DIR}/../src/filter/*.cpp)
+file(GLOB  LDLIDAR_DRI_LOGGER  ${CMAKE_CURRENT_SOURCE_DIR}/../src/logger/*.cpp)
+file(GLOB  LDLIDAR_DRI_SERIAL  ${CMAKE_CURRENT_SOURCE_DIR}/../src/serialcom/*.cpp)
 
-add_executable(${PROJECT_NAME}_node ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
+add_executable(${PROJECT_NAME}_node 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
+)
 
 add_library(ldlidar_driver_static STATIC 
   ${LDLIDAR_DRI_CORE} 
@@ -58,17 +62,28 @@ set_target_properties (ldlidar_driver_static PROPERTIES OUTPUT_NAME "ldlidar_dri
 set_target_properties (ldlidar_driver_shared PROPERTIES OUTPUT_NAME "ldlidar_driver")
 
 # binary file link to library
-target_link_libraries(${PROJECT_NAME}_node ldlidar_driver_static pthread wiringPi)
+if(${USE_WIRINGPI_LIB} MATCHES "ON")
+target_link_libraries(${PROJECT_NAME}_node 
+  ldlidar_driver_static 
+  pthread 
+  wiringPi
+)
+else()
+target_link_libraries(${PROJECT_NAME}_node 
+  ldlidar_driver_static 
+  pthread 
+)
+endif()
 
 ###########
 ## Install ##
 ###########
 
-INSTALL(TARGETS ldlidar_driver_static ldlidar_driver_shared
-  ARCHIVE DESTINATION lib/ldlidar_driver
-  LIBRARY DESTINATION share/ldlidar_driver
-)
+#INSTALL(TARGETS ldlidar_driver_static ldlidar_driver_shared
+#  ARCHIVE DESTINATION lib
+#  LIBRARY DESTINATION share
+#)
 
-INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/ldlidar_driver/include
-  DESTINATION include/ldlidar_driver
-)
+#INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/ldlidar_driver/include
+#  DESTINATION include
+#)

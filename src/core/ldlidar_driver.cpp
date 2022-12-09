@@ -52,12 +52,12 @@ bool LDLidarDriver::Start(LDType product_name, std::string serial_port_name, uin
   }
 
   if (serial_port_name.empty()) {
-    LD_LOG_ERROR("input <serial_port_name> is empty.","");
+    LOG_ERROR("input <serial_port_name> is empty.","");
     return false;
   }
 
   if (register_get_timestamp_handle_ == nullptr) {
-    LD_LOG_ERROR("get timestamp fuctional is not register.","");
+    LOG_ERROR("get timestamp fuctional is not register.","");
     return false;
   }
 
@@ -68,7 +68,7 @@ bool LDLidarDriver::Start(LDType product_name, std::string serial_port_name, uin
   comm_serial_->SetReadCallback(std::bind(&LiPkg::CommReadCallBack, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
 
   if (!(comm_serial_->Open(serial_port_name, serial_baudrate))) {
-    LD_LOG_ERROR("serial is not open:%s", serial_port_name.c_str());
+    LOG_ERROR("serial is not open:%s", serial_port_name.c_str());
     return false;
   }
 

@@ -1,11 +1,11 @@
 /**
-* @file         ldlidar_logger.cpp
-* @author       LDRobot (support@ldrobot.com)
+* @file         log_module.cpp
+* @author       David Hu (hmd_hubei_cn@163.com)
 * @brief         
 * @version      0.1
 * @date         2022.08.10
 * @note          
-* @copyright    Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights reserved.
+* @copyright    Copyright (c) 2022  DAVID HU All rights reserved.
 * Licensed under the MIT License (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License in the file LICENSE
@@ -33,7 +33,7 @@
 LogModule* LogModule::s_plog_module_ = NULL;
 
 
-LogModule* LogModule::GetInstance(__in const char* filename, __in const char* funcname, __in int lineno,LogLevel level,ILogRealization*plog) {
+LogModule* LogModule::GetInstance(__in const char* filename, __in const char* funcname, __in int lineno,LogLevel level,ILogRealization* plog) {
 	if (s_plog_module_ == NULL) {
 		s_plog_module_ = new LogModule();
 	}
@@ -49,8 +49,21 @@ LogModule* LogModule::GetInstance(__in const char* filename, __in const char* fu
 	return s_plog_module_;
 }
 
-LogModule* LogModule::GetInstance(LogLevel level, ILogRealization*plog) {
+LogModule* LogModule::GetInstance(LogLevel level, ILogRealization* plog) {
 	if (s_plog_module_ == NULL) {
+		s_plog_module_ = new LogModule();
+	}
+	s_plog_module_->logInfo_.loglevel = level;
+	
+	if (plog != NULL) {
+		s_plog_module_->p_realization_->free();
+		s_plog_module_->p_realization_ = plog;
+	}
+	return s_plog_module_;
+}
+
+LogModule* LogModule::GetInstancePrintOriginData(LogLevel level, ILogRealization* plog) {
+  if (s_plog_module_ == NULL) {
 		s_plog_module_ = new LogModule();
 	}
 	s_plog_module_->logInfo_.loglevel = level;
@@ -83,35 +96,16 @@ void LogModule::LogPrintInf(const char* format,...) {
 	if (p_realization_) {
 		std::string str_temp;
 		// manufacture
-		str_temp.append("[LDS]");
+		str_temp.append("[LOG]");
+		//时间   [week month day hours:minutes:seconds year]
+		str_temp.append(GetFormatValue(GetCurrentTime()));
+    //时间戳 uint is seconds
+		str_temp.append(GetCurrentLocalTimeStamp());
 		//LogLevel
 		str_temp.append(GetLevelValue(logInfo_.loglevel));
-		switch (logInfo_.loglevel) {
-			case DEBUG_LEVEL: {
-				//时间戳 uint is seconds
-				char s_stamp[100] = {0};
-				uint64_t timestamp = GetCurrentLocalTimeStamp();
-#ifdef __LP64__
-        snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
-#else
-#ifdef _WIN64
-        snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
-#else
-        snprintf(s_stamp, 100, "[%llu.%llu]", (timestamp/1000000000), (timestamp%1000000000));
-#endif
-#endif
-				str_temp.append(s_stamp);
-			}
-				break;
-			default: {
-				//时间   [week month day hours:minutes:seconds year]
-				str_temp.append(GetFormatValue(GetCurrentTime()));
-			}
-				break;
-		}
-	
 		//文件名称
 		str_temp.append(GetFormatValue(logInfo_.str_filename));
+		// 函数名称
 		str_temp.append(GetFormatValue(logInfo_.str_funcname));
 		//行号
 		str_temp.append(GetFormatValue(logInfo_.n_linenumber));
@@ -134,24 +128,14 @@ void LogModule::LogPrintNoLocationInf(const char* format,...) {
 	if (p_realization_) {
 		std::string str_temp;
 		// manufacture
-		str_temp.append("[LDS]");
+		str_temp.append("[LOG]");
+		//时间   [week month day hours:minutes:seconds year]
+		str_temp.append(GetFormatValue(GetCurrentTime()));
+    //时间戳 uint is seconds
+		str_temp.append(GetCurrentLocalTimeStamp());
 		//LogLevel
 		str_temp.append(GetLevelValue(logInfo_.loglevel));
-		
-		//时间戳 uint is seconds
-		char s_stamp[100] = {0};
-		uint64_t timestamp = GetCurrentLocalTimeStamp();
-#ifdef __LP64__
-		snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
-#else
-#ifdef _WIN64
-    snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
-#else
-    snprintf(s_stamp, 100, "[%llu.%llu]", (timestamp/1000000000), (timestamp%1000000000));
-#endif
-#endif
-		str_temp.append(s_stamp);
-		
+
 		va_list ptr;
 		va_start(ptr, format);
 		char c_value[VA_PARAMETER_MAX] = {0};
@@ -161,6 +145,37 @@ void LogModule::LogPrintNoLocationInf(const char* format,...) {
 		str_temp.append(GetFormatValue(c_value));
 
 		p_realization_->LogPrintInf(str_temp.c_str());
+	}
+	UnLock();
+}
+
+void LogModule::LogPrintOriginData(const char* format,...) {
+	Lock();
+	if (p_realization_) {
+		std::string str_temp;
+
+		switch (logInfo_.loglevel) {
+      case INFO_LEVEL: {
+				str_temp.append("[LOG]");
+				str_temp.append(GetFormatValue(GetCurrentTime()));
+				str_temp.append(GetCurrentLocalTimeStamp());
+				str_temp.append(GetLevelValue(logInfo_.loglevel));
+				break;
+			}
+			default: {
+				break;
+			}
+		}
+		
+		va_list ptr;
+		va_start(ptr, format);
+		char c_value[VA_PARAMETER_MAX] = {0};
+		vsnprintf(c_value,sizeof(c_value),format,ptr);
+		va_end(ptr);
+
+		str_temp.append(c_value);
+
+		p_realization_->LogPrintData(str_temp.c_str());
 	}
 	UnLock();
 }
@@ -199,6 +214,7 @@ void LogModule::UnLock() {
 
 std::string LogModule::GetCurrentTime() {
 	std::string curr_time;
+#if 0
 	//Current date/time based on current time
 	time_t now = time(0); 
 	// Convert current time to string
@@ -206,6 +222,40 @@ std::string LogModule::GetCurrentTime() {
 	// Last charactor of currentTime is "\n", so remove it
 	std::string current_time = curr_time.substr(0, curr_time.size()-1);
 	return current_time;
+#else
+  char stdtime_str[50] = {0};
+	time_t std_time = 0;
+	struct tm* local_time = NULL;
+	std_time = time(NULL);
+	local_time = localtime(&std_time);
+	snprintf(stdtime_str, 50, "%d-%d-%d,%d:%d:%d", 
+	local_time->tm_year+1900, local_time->tm_mon+1, local_time->tm_mday,
+	local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+	curr_time.assign(stdtime_str);
+  return curr_time;
+#endif
+}
+
+std::string LogModule::GetCurrentLocalTimeStamp() {
+	//// 获取系统时间戳 uint is seconds
+	std::string stamp_str;
+	std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
+		std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
+	auto tmp = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
+	uint64_t timestamp = (uint64_t)tmp.count();
+	char s_stamp[100] = {0};
+#ifdef __LP64__
+	snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
+#else
+#ifdef _WIN64
+	snprintf(s_stamp, 100, "[%lu.%lu]", (timestamp/1000000000), (timestamp%1000000000));
+#else
+	snprintf(s_stamp, 100, "[%llu.%llu]", (timestamp/1000000000), (timestamp%1000000000));
+#endif
+#endif
+	stamp_str = s_stamp;
+
+	return stamp_str;
 }
 
 std::string LogModule::GetFormatValue(std::string str_value) {
@@ -233,7 +283,7 @@ std::string  LogModule::GetLevelValue(int level){
 		tmp = "DEBUG";
 		break;
 	case WARNING_LEVEL:
-		tmp = "WARNING";
+		tmp = "WARN";
 		break;
 	case ERROR_LEVEL:
 		tmp = "ERROR";
@@ -265,18 +315,36 @@ void LogPrint::free(ILogRealization *plogger) {
 }
 
 void LogPrint::LogPrintInf(const char* str) {
-#ifdef ENABLE_CONSOLE_LOG_DIS
+#ifdef ENABLE_CONSOLE_LOG_DISPALY
 	printf("%s\r\n", str);
 #endif
 
 #ifdef ENABLE_LOG_WRITE_TO_FILE
-	FILE *fp = fopen(LOGFILEPATH,"a");
+  std::string log_filename = GetLogFilePathName();
+	FILE *fp = fopen(log_filename.c_str() ,"a");
 	if(!fp) {
-		printf("%s open filed!\n", LOGFILEPATH);
+		printf("%s open filed!\n", log_filename.c_str());
 		return ;
 	}
 	printf_s(fp,str);
 	printf_s(fp,"\r\n");
+	fclose(fp);
+#endif
+}
+
+void LogPrint::LogPrintData(const char* str) {
+#ifdef ENABLE_CONSOLE_LOG_DISPALY
+	printf("%s", str);
+#endif
+
+#ifdef ENABLE_LOG_WRITE_TO_FILE
+  std::string log_filename = GetOriginDataFilePathName();
+	FILE *fp = fopen(log_filename.c_str() ,"a");
+	if(!fp) {
+		printf("%s open filed!\n", log_filename.c_str());
+		return ;
+	}
+	printf_s(fp,str);
 	fclose(fp);
 #endif
 }

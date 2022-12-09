@@ -1,13 +1,12 @@
 /**
  * @file test.cpp
  * @author LDRobot (support@ldrobot.com)
+ *         David Hu (hmd_hubei_cn@163.com)
  * @brief  sdk function test
- *         This code is only applicable to LDROBOT LiDAR LD00 LD03 LD08 LD14
- * products sold by Shenzhen LDROBOT Co., LTD
- * @version 0.1
- * @date 2021-11-08
+ * @version 3.0
+ * @date 2022-12-09
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2020  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +19,10 @@
  */
 
 #include "ldlidar_driver.h"
+
+#ifdef USE_WIRINGPI
 #include <wiringPi.h>
+#endif
 
 uint64_t GetTimestamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
@@ -31,25 +33,31 @@ uint64_t GetTimestamp(void) {
 
 bool  ControlPinInit(void) {
   // raspberrypi wiringPi GPIO Init
+#ifdef USE_WIRINGPI
   if(wiringPiSetup() == -1) {
     return false;
   }
   pinMode(25,OUTPUT); // set wiringPi 25 Pin number is outuput Mode.
+#endif
   return true;
 }
 
 void LidarPowerOn(void) {
-  LDS_LOG_DEBUG("Lidar Power On","");
+  LOG_DEBUG("Lidar Power On","");
+#ifdef USE_WIRINGPI
   digitalWrite(25,HIGH);
+#endif
 }
 
 void LidarPowerOff(void) {
-  LDS_LOG_DEBUG("Lidar Power Off","");
+  LOG_DEBUG("Lidar Power Off","");
+#ifdef USE_WIRINGPI
   digitalWrite(25,LOW);
+#endif
 }
 
 void AbortTesting(void) {
-  LDS_LOG_WARN("Testing abort","");
+  LOG_WARN("Testing abort","");
   LidarPowerOff();
   exit(EXIT_FAILURE);
 }
@@ -57,12 +65,12 @@ void AbortTesting(void) {
 int function_main(int argc, char **argv) {
   
   if (argc != 2) {
-    LDS_LOG_INFO("cmd error","");
-    LDS_LOG_INFO("please input: ./ldlidar_sl_node <serial_number>","");
-    LDS_LOG_INFO("example:","");
-    LDS_LOG_INFO("./ldlidar_sl_node /dev/ttyUSB0","");
-    LDS_LOG_INFO("or","");
-    LDS_LOG_INFO("./ldlidar_sl_node /dev/ttyS0","");
+    LOG_INFO("cmd error","");
+    LOG_INFO("please input: ./ldlidar_sl_node <serial_number>","");
+    LOG_INFO("example:","");
+    LOG_INFO("./ldlidar_sl_node /dev/ttyUSB0","");
+    LOG_INFO("or","");
+    LOG_INFO("./ldlidar_sl_node /dev/ttyS0","");
     exit(EXIT_FAILURE);
   }
   
@@ -70,24 +78,24 @@ int function_main(int argc, char **argv) {
   
   ldlidar::LDLidarDriver* node = new ldlidar::LDLidarDriver();
   
-  LDS_LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
+  LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
 
   node->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
 
   node->EnableFilterAlgorithnmProcess(true);
 
   if (node->Start(ldlidar::LDType::LD_14, port_name)) {
-    LDS_LOG_INFO("ldlidar node start is success","");
+    LOG_INFO("ldlidar node start is success","");
     LidarPowerOn();
   } else {
-    LDS_LOG_ERROR("ldlidar node start is fail","");
+    LOG_ERROR("ldlidar node start is fail","");
     exit(EXIT_FAILURE);
   }
 
   if (node->WaitLidarCommConnect(3500)) {
-    LDS_LOG_INFO("ldlidar communication is normal.","");
+    LOG_INFO("ldlidar communication is normal.","");
   } else {
-    LDS_LOG_ERROR("ldlidar communication is abnormal.","");
+    LOG_ERROR("ldlidar communication is abnormal.","");
     AbortTesting();
   }
   
@@ -104,15 +112,15 @@ int function_main(int argc, char **argv) {
         node->GetLidarScanFreq(lidar_scan_freq);
 
 #ifdef __LP64__
-        LDS_LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%lu, stamp_back:%lu",
+        LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%lu, stamp_back:%lu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #else
-        LDS_LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%llu, stamp_back:%llu",
+        LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%llu, stamp_back:%llu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #endif
 
         if (laser_scan_points.front().stamp >= laser_scan_points.back().stamp) {
-          LDS_LOG_ERROR("timestamp error!","");
+          LOG_ERROR("timestamp error!","");
           node->Stop();
           AbortTesting();
         }
@@ -125,7 +133,7 @@ int function_main(int argc, char **argv) {
         }
         
         if (distance_zero_point_cnt >= (int)laser_scan_points.size()) {
-          LDS_LOG_ERROR("a frame distance is zero value","");
+          LOG_ERROR("a frame distance is zero value","");
           node->Stop();
           AbortTesting();
         }
@@ -133,7 +141,7 @@ int function_main(int argc, char **argv) {
         break;
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
-        LDS_LOG_ERROR("ldlidar point cloud data publish time out, please check your lidar device.","");
+        LOG_ERROR("point cloud data publish time out, please check your lidar device.","");
         node->Stop();
         AbortTesting();
         break;
@@ -161,7 +169,7 @@ int function_main(int argc, char **argv) {
 int main(int argc, char** argv) {
 
   if (!ControlPinInit()) {
-    LDS_LOG_ERROR("Control pin Setup failed.","");
+    LOG_ERROR("Control pin Setup failed.","");
     exit(EXIT_FAILURE);
   }
   
@@ -169,7 +177,7 @@ int main(int argc, char** argv) {
     function_main(argc, argv);
   }
   
-  LDS_LOG_INFO("test is end.","");
+  LOG_INFO("test is end.","");
   while (1) {
     sleep(1);
   }
