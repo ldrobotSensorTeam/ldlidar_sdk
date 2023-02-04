@@ -37,10 +37,14 @@
 
 namespace ldlidar {
 
-
 enum class LDType {
   NO_VER,
   LD_14, 
+  LD_06,
+  LD_19,
+  STL_06P,
+  STL_26,
+  STL_27L,
 };
 
 enum class LidarStatus {

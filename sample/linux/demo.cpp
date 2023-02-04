@@ -42,11 +42,11 @@ int main(int argc, char **argv) {
   
   if (argc != 2) {
     LOG_INFO("cmd error","");
-    LOG_INFO("please input: ./ldlidar_sl_node <serial_number>","");
+    LOG_INFO("please input: ./ldlidar <serial_number>","");
     LOG_INFO("example:","");
-    LOG_INFO("./ldlidar_sl_node /dev/ttyUSB0","");
+    LOG_INFO("./ldlidar /dev/ttyUSB0","");
     LOG_INFO("or","");
-    LOG_INFO("./ldlidar_sl_node /dev/ttyS0","");
+    LOG_INFO("./ldlidar /dev/ttyS0","");
     exit(EXIT_FAILURE);
   }
   
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
         break;
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
-        LOG_ERROR("ldlidar point cloud data publish time out, please check your lidar device.","");
+        LOG_ERROR("point cloud data publish time out, please check your lidar device.","");
         node->Stop();
         break;
       }

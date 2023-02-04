@@ -65,7 +65,8 @@ bool LDLidarDriver::Start(LDType product_name, std::string serial_port_name, uin
   comm_pkg_->RegisterTimestampGetFunctional(register_get_timestamp_handle_);
   comm_pkg_->SetProductType(product_name);
 
-  comm_serial_->SetReadCallback(std::bind(&LiPkg::CommReadCallBack, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+  comm_serial_->SetReadCallback(std::bind(
+    &LiPkg::CommReadCallBack, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
 
   if (!(comm_serial_->Open(serial_port_name, serial_baudrate))) {
     LOG_ERROR("serial is not open:%s", serial_port_name.c_str());
@@ -131,7 +132,8 @@ LidarStatus LDLidarDriver::GetLaserScanData(Points2D& dst, int64_t timeout) {
       return LidarStatus::NORMAL;
     }
     
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - last_pubdata_times_).count() > timeout) {
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - last_pubdata_times_).count() > timeout) {
       return LidarStatus::DATA_TIME_OUT;
     } else {
       return LidarStatus::DATA_WAIT;
