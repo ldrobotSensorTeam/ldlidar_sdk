@@ -255,7 +255,7 @@ bool LiPkg::AssemblePacket() {
   return false;
 }
 
-void LiPkg::CommReadCallBack(const char *byte, size_t len) {
+void LiPkg::CommReadCallback(const char *byte, size_t len) {
   if (Parse((uint8_t *)byte, len)) {
     AssemblePacket();
   }
@@ -324,52 +324,6 @@ Points2D LiPkg::GetLaserScanData(void) {
   std::lock_guard<std::mutex> lg(mutex_lock2_);
   return lidar_scan_data_vec_; 
 }
-
-// BUG  this function is unstable .
-// void LiPkg::AnalysisLidarIsBlocking(uint16_t lidar_speed_val){
-//   static int16_t judge_block_cnt = 0;
-//   static uint16_t last_speed = 0;
-//   uint16_t curr_speed = lidar_speed_val;
-//   if ((curr_speed == 0) && (last_speed == 0)) {
-//     judge_block_cnt++;
-//   } else {
-//     judge_block_cnt--;
-//     if (judge_block_cnt <= 0) {
-//       judge_block_cnt = 0;
-//     }
-//   }
-//   if (judge_block_cnt >= 5) {
-//     SetLidarStatus(LidarStatus::ERROR);
-//     SetLidarErrorCode(LIDAR_ERROR_BLOCKING);
-//   } else {
-//     SetLidarStatus(LidarStatus::NORMAL);
-//     SetLidarErrorCode(LIDAR_NO_ERROR);
-//   }
-//   last_speed = curr_speed;
-// }
-
-// BUG  this function is unstable .
-// void LiPkg::AnalysisLidarIsOcclusion(Points2D& lidar_data) {
-
-//   uint16_t no_occlusion_count = 0;
-//   for (auto point: lidar_data) {
-//     if (point.distance != 0) {
-//       no_occlusion_count++;
-//     }
-//   }
-
-//   if (no_occlusion_count <= 5) {
-//     SetLidarStatus(LidarStatus::ERROR);
-//     if (GetLidarErrorCode() == LIDAR_ERROR_BLOCKING) {
-//       SetLidarErrorCode(LIDAR_ERROR_BLOCKING_AND_OCCLUSION);
-//     } else {
-//       SetLidarErrorCode(LIDAR_ERROR_OCCLUSION);
-//     }
-//   } else {
-//     SetLidarStatus(LidarStatus::NORMAL);
-//     SetLidarErrorCode(LIDAR_NO_ERROR);
-//   }
-// }
 
 }  // namespace ldlidar
 

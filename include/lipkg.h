@@ -66,7 +66,7 @@ public:
 
   void RegisterTimestampGetFunctional(std::function<uint64_t(void)> timestamp_handle);
 
-  void CommReadCallBack(const char *byte, size_t len);
+  void CommReadCallback(const char *byte, size_t len);
 
   /**
    * @brief get lidar scan data
@@ -133,10 +133,6 @@ private:
   void SetLaserScanData(Points2D& src);
 
   Points2D GetLaserScanData(void);
-
-  // void AnalysisLidarIsBlocking(uint16_t lidar_speed_val);
-
-  // void AnalysisLidarIsOcclusion(Points2D& lidar_data);
 };
 
 } // namespace ldlidar

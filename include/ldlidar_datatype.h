@@ -78,6 +78,20 @@ struct PointData {
 
 typedef std::vector<PointData> Points2D;
 
+struct LaserScan {
+  //! System time when first range was measured in nanoseconds
+  uint64_t stamp;
+  //! Array of laser point
+  Points2D points;
+  
+  LaserScan &operator=(const LaserScan &data) {
+    this->stamp = data.stamp;
+    this->points = data.points;
+    return *this;
+  }
+};
+
+
 } // namespace ldlidar
 
 #endif  // _LDLIDAR_POINT_DATA_H_

@@ -25,9 +25,19 @@
 
 #include "lipkg.h"
 #include "serial_interface_linux.h"
+#include "network_socket_interface_linux.h"
 #include "log_module.h"
 
 namespace ldlidar {
+
+typedef enum CommunicationMode {
+  COMM_NO_NULL,
+  COMM_SERIAL_MODE, /* serial communication */
+  COMM_UDP_CLIENT_MODE, /* network communication for UDP client */
+  COMM_UDP_SERVER_MODE, /* network communication for UDP server */
+  COMM_TCP_CLIENT_MODE, /* network communication for TCP client */
+  COMM_TCP_SERVER_MODE  /* network communication for TCP server */
+}CommunicationModeType;
 
 class LDLidarDriver {
 public:
@@ -52,7 +62,15 @@ public:
    * @retval value is true, start is success;
    *   value is false, start is failed.
   */
-  bool Start(LDType product_name, std::string serial_port_name, uint32_t serial_baudrate = 115200);
+  bool Start(LDType product_name, 
+            std::string serial_port_name, 
+            uint32_t serial_baudrate = 115200,
+            CommunicationModeType comm_mode = COMM_SERIAL_MODE);
+
+  bool Start(LDType product_name, 
+            const char* server_ip, 
+            const char* server_port,
+            CommunicationModeType comm_mode = COMM_TCP_CLIENT_MODE);
   
   bool Stop(void);
   
@@ -73,13 +91,21 @@ public:
    * *@param dst: type is ldlidar::Point2D, value is laser scan point cloud data
    * @param [in]
    * *@param timeout: Wait timeout, in milliseconds
-   * @retval value is ldlidar::LidarStatus Enum Type, definition in "ldlidar_driver/include/ldlidar_datatype.h", value is:
+   * @retval value is ldlidar::LidarStatus Enum Type, definition in "include/ldlidar_datatype.h", value is:
    *  ldlidar::LidarStatus::NORMAL   // 雷达正常
    *  lldlidar::LidarStatus::ERROR    // 雷达异常错误
    *  ....
   */
   LidarStatus GetLaserScanData(Points2D& dst, int64_t timeout = 1000);
+
+  LidarStatus GetLaserScanData(LaserScan& dst, int64_t timeout = 1000);
   
+  /**
+   * @brief get lidar scan frequence
+   * @param [output]
+   * *@param spin_hz: value is lidar scan frequence, unit is Hz
+   * @retval value is true, get sucess; 
+  */
   bool GetLidarScanFreq(double& spin_hz);  
 
   /**
@@ -107,6 +133,8 @@ private:
   bool is_start_flag_;
   LiPkg* comm_pkg_;
   SerialInterfaceLinux* comm_serial_;
+  TCPSocketInterfaceLinux* comm_tcp_network_;
+  UDPSocketInterfaceLinux* comm_udp_network_;
   std::function<uint64_t(void)> register_get_timestamp_handle_;
   std::chrono::_V2::steady_clock::time_point last_pubdata_times_;
 };

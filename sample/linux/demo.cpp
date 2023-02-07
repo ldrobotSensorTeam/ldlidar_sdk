@@ -38,6 +38,30 @@ uint64_t GetTimestamp(void) {
 //   // ...
 // }
 
+ldlidar::LDType GetLdlidarType(std::string& in_str) {
+  if (in_str.c_str() == "LD14") {
+    return ldlidar::LDType::LD_14;
+  } else if (in_str.c_str() == "LD06") {
+    return ldlidar::LDType::LD_06;
+  } else if (in_str.c_str() == "LD19") {
+    return ldlidar::LDType::LD_19;
+  } else {
+    return ldlidar::LDType::NO_VER;
+  }
+}
+
+uint32_t GetLdlidarSerialPortBaudrateValue(std::string& in_str) {
+  if (in_str.c_str() == "LD14") {
+    return 115200;
+  } else if (in_str.c_str() == "LD06") {
+    return 230400;
+  } else if (in_str.c_str() == "LD19") {
+    return 230400;
+  } else {
+    return 0;
+  }
+}
+
 int main(int argc, char **argv) {
   
   if (argc != 2) {
@@ -50,7 +74,24 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
   
-  std::string port_name(argv[1]);
+  std::string ldlidar_type_str(argv[1]);
+  std::string ldlidar_serial_port_name(argv[2]);
+
+  // select ldrobot lidar sensor type.
+  ldlidar::LDType ldlidar_type_dest;
+  ldlidar_type_dest = GetLdlidarType(ldlidar_type_str);
+  if (ldlidar_type_dest == ldlidar::LDType::NO_VER) {
+    LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
+    exit(EXIT_FAILURE);
+  }
+
+  // if use serial communications interface, as select serial baudrate paramters.
+  uint32_t ldlidar_serial_baudrate_val;
+  ldlidar_serial_baudrate_val = GetLdlidarSerialPortBaudrateValue(ldlidar_type_str);
+  if (!ldlidar_serial_baudrate_val) {
+    LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
+    exit(EXIT_FAILURE);
+  }
   
   ldlidar::LDLidarDriver* node = new ldlidar::LDLidarDriver();
   
@@ -60,7 +101,7 @@ int main(int argc, char **argv) {
 
   node->EnableFilterAlgorithnmProcess(true);
 
-  if (node->Start(ldlidar::LDType::LD_14, port_name)) {
+  if (node->Start(ldlidar_type_dest, ldlidar_serial_port_name, ldlidar_serial_baudrate_val)) {
     LOG_INFO("ldlidar node start is success","");
     // LidarPowerOn();
   } else {
