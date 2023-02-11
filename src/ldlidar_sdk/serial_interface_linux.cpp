@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "serial_interface_linux.h"
-#include "log_module.h"
+#include "ldlidar_sdk/serial_interface_linux.h"
+#include "ldlidar_sdk/log_module.h"
 
 
 #define MAX_ACK_BUF_LEN 4096

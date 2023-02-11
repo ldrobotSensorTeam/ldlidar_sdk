@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 **/
-#include "log_module.h"
+#include "ldlidar_sdk/log_module.h"
 
 #include <time.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 /**
- * @file ldlidar_driver.h
+ * @file ldlidar_sdk.h
  * @author LDRobot (support@ldrobot.com)
- * @brief  ldlidar processing App
+ * @brief  ldlidar sdk interface
  *         This code is only applicable to LDROBOT LiDAR LD14
  * products sold by Shenzhen LDROBOT Co., LTD
  * @version 0.1
@@ -18,15 +18,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LDLIDAR_DRIVER_NODE_H__
-#define __LDLIDAR_DRIVER_NODE_H__
+#ifndef __LDLIDAR_DRIVER_SDK_INTERFACE_H__
+#define __LDLIDAR_DRIVER_SDK_INTERFACE_H__
 
 #include <chrono>
 
-#include "lipkg.h"
-#include "serial_interface_linux.h"
-#include "network_socket_interface_linux.h"
-#include "log_module.h"
+#include "ldlidar_sdk/lipkg.h"
+#include "ldlidar_sdk/serial_interface_linux.h"
+#include "ldlidar_sdk/network_socket_interface_linux.h"
+#include "ldlidar_sdk/log_module.h"
 
 namespace ldlidar {
 

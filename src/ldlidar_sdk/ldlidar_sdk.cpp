@@ -1,9 +1,9 @@
 /**
- * @file ldlidar_node.cpp
+ * @file ldlidar_sdk.cpp
  * @author LDRobot (support@ldrobot.com)
- * @brief  ldlidar processing App
- *         This code is only applicable to LDROBOT LiDAR LD14
- * products sold by Shenzhen LDROBOT Co., LTD
+ * @brief  ldlidar sdk interface
+ *         This code is only applicable to LDROBOT LiDAR products 
+ * sold by Shenzhen LDROBOT Co., LTD
  * @version 0.1
  * @date 2021-05-12
  *
@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_driver.h"
+#include "ldlidar_sdk/ldlidar_sdk.h"
 
 namespace ldlidar {
 

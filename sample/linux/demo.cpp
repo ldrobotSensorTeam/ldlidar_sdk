@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-#include "ldlidar_driver.h"
+#include "ldlidar_sdk/ldlidar_sdk.h"
 
 uint64_t GetTimestamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
@@ -38,24 +38,26 @@ uint64_t GetTimestamp(void) {
 //   // ...
 // }
 
-ldlidar::LDType GetLdlidarType(std::string& in_str) {
-  if (in_str.c_str() == "LD14") {
+ldlidar::LDType GetLdsType(std::string& in_str) {
+  const char* type_number[3] = {"LD14", "LD06", "LD19"};
+  if (in_str.c_str() == type_number[0]) {
     return ldlidar::LDType::LD_14;
-  } else if (in_str.c_str() == "LD06") {
+  } else if (in_str.c_str() == type_number[1]) {
     return ldlidar::LDType::LD_06;
-  } else if (in_str.c_str() == "LD19") {
+  } else if (in_str.c_str() == type_number[2]) {
     return ldlidar::LDType::LD_19;
   } else {
     return ldlidar::LDType::NO_VER;
   }
 }
 
-uint32_t GetLdlidarSerialPortBaudrateValue(std::string& in_str) {
-  if (in_str.c_str() == "LD14") {
+uint32_t GetLdsSerialPortBaudrateValue(std::string& in_str) {
+  const char* type_number[3] = {"LD14", "LD06", "LD19"};
+  if (in_str.c_str() == type_number[0]) {
     return 115200;
-  } else if (in_str.c_str() == "LD06") {
+  } else if (in_str.c_str() == type_number[1]) {
     return 230400;
-  } else if (in_str.c_str() == "LD19") {
+  } else if (in_str.c_str() == type_number[2]) {
     return 230400;
   } else {
     return 0;
@@ -79,7 +81,7 @@ int main(int argc, char **argv) {
 
   // select ldrobot lidar sensor type.
   ldlidar::LDType ldlidar_type_dest;
-  ldlidar_type_dest = GetLdlidarType(ldlidar_type_str);
+  ldlidar_type_dest = GetLdsType(ldlidar_type_str);
   if (ldlidar_type_dest == ldlidar::LDType::NO_VER) {
     LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
     exit(EXIT_FAILURE);
@@ -87,7 +89,7 @@ int main(int argc, char **argv) {
 
   // if use serial communications interface, as select serial baudrate paramters.
   uint32_t ldlidar_serial_baudrate_val;
-  ldlidar_serial_baudrate_val = GetLdlidarSerialPortBaudrateValue(ldlidar_type_str);
+  ldlidar_serial_baudrate_val = GetLdsSerialPortBaudrateValue(ldlidar_type_str);
   if (!ldlidar_serial_baudrate_val) {
     LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
     exit(EXIT_FAILURE);

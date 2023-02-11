@@ -26,7 +26,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/
 )
 
-file(GLOB  LDLIDAR_DRIVER_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+file(GLOB  LDLIDAR_DRIVER_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/ldlidar_sdk/*.cpp)
 
 add_executable(${PROJECT_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}/sample/linux/demo.cpp
@@ -52,10 +52,10 @@ target_link_libraries(${PROJECT_NAME} ldlidar_driver_static pthread)
 ###########
 
 INSTALL(TARGETS ldlidar_driver_static ldlidar_driver_shared
-  ARCHIVE DESTINATION lib/ldlidar_driver
-  LIBRARY DESTINATION share/ldlidar_driver
+  ARCHIVE DESTINATION lib/ldlidar_sdk
+  LIBRARY DESTINATION share/ldlidar_sdk
 )
 
 INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/include
-  DESTINATION include/ldlidar_driver
+  DESTINATION include
 )

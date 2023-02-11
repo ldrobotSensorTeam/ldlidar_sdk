@@ -31,11 +31,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../include/
 )
 
-file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core/*.cpp)
-file(GLOB  LDLIDAR_DRI_DATARPC ${CMAKE_CURRENT_SOURCE_DIR}/../src/dataprocess/*.cpp)
-file(GLOB  LDLIDAR_DRI_FILTER  ${CMAKE_CURRENT_SOURCE_DIR}/../src/filter/*.cpp)
-file(GLOB  LDLIDAR_DRI_LOGGER  ${CMAKE_CURRENT_SOURCE_DIR}/../src/logger/*.cpp)
-file(GLOB  LDLIDAR_DRI_SERIAL  ${CMAKE_CURRENT_SOURCE_DIR}/../src/serialcom/*.cpp)
+file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_sdk/*.cpp)
 
 add_executable(${PROJECT_NAME}_node 
   ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
@@ -43,18 +39,10 @@ add_executable(${PROJECT_NAME}_node
 
 add_library(ldlidar_driver_static STATIC 
   ${LDLIDAR_DRI_CORE} 
-  ${LDLIDAR_DRI_DATARPC} 
-  ${LDLIDAR_DRI_FILTER} 
-  ${LDLIDAR_DRI_LOGGER} 
-  ${LDLIDAR_DRI_SERIAL}
 )
 
 add_library(ldlidar_driver_shared SHARED 
   ${LDLIDAR_DRI_CORE} 
-  ${LDLIDAR_DRI_DATARPC} 
-  ${LDLIDAR_DRI_FILTER} 
-  ${LDLIDAR_DRI_LOGGER} 
-  ${LDLIDAR_DRI_SERIAL}
 )
 
 # rename library name
