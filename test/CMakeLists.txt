@@ -31,7 +31,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../include/
 )
 
-file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_sdk/*.cpp)
+file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_driver/*.cpp)
 
 add_executable(${PROJECT_NAME}_node 
   ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp

@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "ldlidar_sdk/ldlidar_datatype.h"
+#include "ldlidar_driver/ldlidar_datatype.h"
 
 namespace ldlidar {
 

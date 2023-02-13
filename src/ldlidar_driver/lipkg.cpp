@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_sdk/lipkg.h"
+#include "ldlidar_driver/lipkg.h"
 
 namespace ldlidar {
 
@@ -81,7 +81,17 @@ void LiPkg::SetProductType(LDType typenumber) {
     case LDType::LD_14:
       lidar_measure_freq_ = 2300;
       break;
-    
+    case LDType::LD_06:
+    case LDType::LD_19:
+      lidar_measure_freq_ = 4500;
+      break;
+    case LDType::STL_06P:
+    case LDType::STL_26:
+      lidar_measure_freq_ = 5000;
+      break;
+    case LDType::STL_27L:
+      lidar_measure_freq_ = 21600;
+      break;
     default :
       lidar_measure_freq_ = 2300;
       break;
@@ -104,7 +114,7 @@ bool LiPkg::AnalysisOne(uint8_t byte) {
   } state = HEADER;
   static uint16_t count = 0;
   static uint8_t tmp[128] = {0};
-  static uint16_t pkg_count = sizeof(LiDARFrameTypeDef);
+  static uint16_t pkg_count = sizeof(LiDARFrameType);
 
   switch (state) {
     case HEADER:
@@ -161,7 +171,6 @@ bool LiPkg::Parse(const uint8_t *data, long len) {
       if (diff <= ((double)datapkg_.speed * POINT_PER_PACK / lidar_measure_freq_ * 1.5)) {
         if (0 == last_pkg_timestamp_) {
           last_pkg_timestamp_ = get_timestamp_();
-          continue;
         } else {
           uint64_t current_pack_stamp = get_timestamp_();
           int pkg_point_number = POINT_PER_PACK;
@@ -214,18 +223,41 @@ bool LiPkg::AssemblePacket() {
       }
       data.insert(data.begin(), tmp_lidar_scan_data_vec_.begin(), tmp_lidar_scan_data_vec_.begin() + count);
 
-      SlTransform trans(typenumber_);
-      data = trans.Transform(data); // transform raw data to stantard data  
-    
-      if (is_noise_filter_) {
-        std::sort(data.begin(), data.end(), [](PointData a, PointData b) { return a.angle < b.angle;});
-        Slbf sb(speed_);
-        tmp = sb.NearFilter(data); // filter noise point
-      } else {
-        tmp = data;
+      switch (typenumber_) {
+        case LDType::LD_14: {
+          SlTransform trans(typenumber_);
+          data = trans.Transform(data); // transform raw data to stantard data  
+          if (is_noise_filter_) {
+            std::sort(data.begin(), data.end(), 
+              [](PointData a, PointData b) { return a.angle < b.angle;});
+            Slbf sb(speed_);
+            tmp = sb.NearFilter(data); // filter noise point
+          } else {
+            tmp = data;
+          }
+          break;
+        }
+        case LDType::LD_06:
+        case LDType::LD_19:
+        case LDType::STL_06P:
+        case LDType::STL_26:
+        case LDType::STL_27L: {
+          if (is_noise_filter_) {
+            Tofbf tofbfLd(speed_, typenumber_);
+            tmp = tofbfLd.Filter(data); // filter noise point
+          } else {
+            tmp = data;
+          }
+          break;
+        }
+        default : {
+          tmp = data;
+          break;
+        }
       }
-      
-      std::sort(tmp.begin(), tmp.end(), [](PointData a, PointData b) { return a.stamp < b.stamp; });
+
+      std::sort(tmp.begin(), tmp.end(), 
+        [](PointData a, PointData b) { return a.stamp < b.stamp; });
       if (tmp.size() > 0) {
         SetLaserScanData(tmp);
         SetFrameReady();

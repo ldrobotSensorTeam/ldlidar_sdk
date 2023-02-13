@@ -1,5 +1,5 @@
 /**
- * @file ldlidar_sdk.h
+ * @file ldlidar_driver.h
  * @author LDRobot (support@ldrobot.com)
  * @brief  ldlidar sdk interface
  *         This code is only applicable to LDROBOT LiDAR LD14
@@ -23,10 +23,10 @@
 
 #include <chrono>
 
-#include "ldlidar_sdk/lipkg.h"
-#include "ldlidar_sdk/serial_interface_linux.h"
-#include "ldlidar_sdk/network_socket_interface_linux.h"
-#include "ldlidar_sdk/log_module.h"
+#include "ldlidar_driver/lipkg.h"
+#include "ldlidar_driver/serial_interface_linux.h"
+#include "ldlidar_driver/network_socket_interface_linux.h"
+#include "ldlidar_driver/log_module.h"
 
 namespace ldlidar {
 

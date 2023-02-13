@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-#include "ldlidar_sdk/ldlidar_sdk.h"
+#include "ldlidar_driver/ldlidar_driver.h"
 
 uint64_t GetTimestamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 

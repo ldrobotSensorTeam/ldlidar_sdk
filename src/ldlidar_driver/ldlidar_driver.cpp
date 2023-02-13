@@ -1,5 +1,5 @@
 /**
- * @file ldlidar_sdk.cpp
+ * @file ldlidar_driver.cpp
  * @author LDRobot (support@ldrobot.com)
  * @brief  ldlidar sdk interface
  *         This code is only applicable to LDROBOT LiDAR products 
@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_sdk/ldlidar_sdk.h"
+#include "ldlidar_driver/ldlidar_driver.h"
 
 namespace ldlidar {
 

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#include "ldlidar_sdk/network_socket_interface_linux.h"
-#include "ldlidar_sdk/log_module.h"
+#include "ldlidar_driver/network_socket_interface_linux.h"
+#include "ldlidar_driver/log_module.h"
 
 #define MAX_RECV_BUF_LEN 4096
 

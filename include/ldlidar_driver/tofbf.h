@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "ldlidar_sdk/ldlidar_datatype.h"
+#include "ldlidar_driver/ldlidar_datatype.h"
 
 namespace ldlidar {
 

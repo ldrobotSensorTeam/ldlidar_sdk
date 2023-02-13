@@ -27,8 +27,9 @@
 #include <mutex>
 #include <functional>
 
-#include "ldlidar_sdk/slbf.h"
-#include "ldlidar_sdk/sl_transform.h"
+#include "ldlidar_driver/slbf.h"
+#include "ldlidar_driver/sl_transform.h"
+#include "ldlidar_driver/tofbf.h"
 
 namespace ldlidar {
 
@@ -41,18 +42,18 @@ enum {
 typedef struct __attribute__((packed)) {
   uint16_t distance;
   uint8_t intensity;
-} LidarPointStructDef;
+} LidarPointStructType;
 
 typedef struct __attribute__((packed)) {
   uint8_t header;
   uint8_t ver_len;
   uint16_t speed;
   uint16_t start_angle;
-  LidarPointStructDef point[POINT_PER_PACK];
+  LidarPointStructType point[POINT_PER_PACK];
   uint16_t end_angle;
   uint16_t timestamp;
   uint8_t crc8;
-} LiDARFrameTypeDef;
+} LiDARFrameType;
 
 class LiPkg {
 public:
@@ -108,7 +109,7 @@ private:
   uint8_t poweron_datapkg_count_;
   uint64_t last_pkg_timestamp_;
 
-  LiDARFrameTypeDef datapkg_;
+  LiDARFrameType datapkg_;
   Points2D lidar_scan_data_vec_;
   Points2D tmp_lidar_scan_data_vec_;
   std::mutex mutex_lock1_;

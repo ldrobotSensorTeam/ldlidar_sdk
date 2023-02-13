@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_sdk/slbf.h"
+#include "ldlidar_driver/slbf.h"
 
 namespace ldlidar {
 

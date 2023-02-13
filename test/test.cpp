@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ldlidar_sdk/ldlidar_sdk.h"
+#include "ldlidar_driver/ldlidar_driver.h"
 
 #ifdef USE_WIRINGPI
 #include <wiringPi.h>
