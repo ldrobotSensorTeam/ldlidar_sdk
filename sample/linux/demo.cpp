@@ -38,26 +38,23 @@ uint64_t GetTimestamp(void) {
 //   // ...
 // }
 
-ldlidar::LDType GetLdsType(std::string& in_str) {
-  const char* type_number[3] = {"LD14", "LD06", "LD19"};
-  if (in_str.c_str() == type_number[0]) {
+ldlidar::LDType GetLdsType(std::string in_str) {
+  if (!strcmp(in_str.c_str(),"LD14")) {
     return ldlidar::LDType::LD_14;
-  } else if (in_str.c_str() == type_number[1]) {
+  } else if (!strcmp(in_str.c_str(),"LD06")) {
     return ldlidar::LDType::LD_06;
-  } else if (in_str.c_str() == type_number[2]) {
+  } else if (!strcmp(in_str.c_str(),"LD19")) {
     return ldlidar::LDType::LD_19;
   } else {
     return ldlidar::LDType::NO_VER;
   }
 }
 
-uint32_t GetLdsSerialPortBaudrateValue(std::string& in_str) {
-  const char* type_number[3] = {"LD14", "LD06", "LD19"};
-  if (in_str.c_str() == type_number[0]) {
+uint32_t GetLdsSerialPortBaudrateValue(std::string in_str) {
+  if (!strcmp(in_str.c_str(),"LD14")) {
     return 115200;
-  } else if (in_str.c_str() == type_number[1]) {
-    return 230400;
-  } else if (in_str.c_str() == type_number[2]) {
+  } else if ((!strcmp(in_str.c_str(),"LD06")) || 
+    (!strcmp(in_str.c_str(),"LD19"))) {
     return 230400;
   } else {
     return 0;
@@ -66,13 +63,13 @@ uint32_t GetLdsSerialPortBaudrateValue(std::string& in_str) {
 
 int main(int argc, char **argv) {
   
-  if (argc != 2) {
+  if (argc != 3) {
     LOG_INFO("cmd error","");
-    LOG_INFO("please input: ./ldlidar <serial_number>","");
+    LOG_INFO("please input: ./ldlidar <lidar type> <serial number>","");
     LOG_INFO("example:","");
-    LOG_INFO("./ldlidar /dev/ttyUSB0","");
+    LOG_INFO("./ldlidar LD14 /dev/ttyUSB0","");
     LOG_INFO("or","");
-    LOG_INFO("./ldlidar /dev/ttyS0","");
+    LOG_INFO("./ldlidar LD14 /dev/ttyS0","");
     exit(EXIT_FAILURE);
   }
   
@@ -126,26 +123,28 @@ int main(int argc, char **argv) {
         double lidar_scan_freq = 0;
         node->GetLidarScanFreq(lidar_scan_freq);
 #ifdef __LP64__
-        LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%lu, stamp_back:%lu",
+        LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%lu, stamp_end:%lu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #else
-        LOG_INFO("speed(Hz):%f, size:%d,stamp_front:%llu, stamp_back:%llu",
+        LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%llu, stamp_end:%llu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #endif
         //  output 2d point cloud data
+#if 0
         for (auto point : laser_scan_points) {
 #ifdef __LP64__
-          LOG_INFO("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
+          LOG_INFO_LITE("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
               point.stamp, point.angle, point.distance, point.intensity);
 #else
-          LOG_INFO("stamp(ns):%llu,angle:%f,distance(mm):%d,intensity:%d", 
+          LOG_INFO_LITE("stamp(ns):%llu,angle:%f,distance(mm):%d,intensity:%d", 
               point.stamp, point.angle, point.distance, point.intensity);
 #endif
         }
+#endif
         break;
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
-        LOG_ERROR("point cloud data publish time out, please check your lidar device.","");
+        LOG_ERROR_LITE("point cloud data publish time out, please check your lidar device.","");
         node->Stop();
         break;
       }
