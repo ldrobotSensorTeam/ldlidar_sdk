@@ -8,4 +8,5 @@ This SDK is only applicable to the LiDAR products sold by Shenzhen LDROBOT Co., 
 
 ---
 ## Instructions
-- [EN](./INSTRUCTIONS.en.md) ;[CN](./INSTRUCTIONS.cn.md)
+- [EN](./INSTRUCTIONS.en.md)
+- [CN](./INSTRUCTIONS.cn.md)

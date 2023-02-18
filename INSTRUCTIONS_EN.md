@@ -28,7 +28,12 @@ $ ./auto_build.sh
 
 ## run
 ``` bash
-$ ./build/ldlidar_driver_node <serial_number>
-# example 
-$ ./build/ldlidar_driver_node /dev/ttyUSB0
+$ ./build/ldlidar <lidar_typename> <serial_number>
+# example:
+# LDLiDAR LD14 
+$ ./build/ldlidar LD14 /dev/ttyUSB0
+# LDLiDAR LD06
+$ ./build/ldlidar LD06 /dev/ttyUSB0
+# LDLiDAR LD19
+$ ./build/ldlidar LD19 /dev/ttyUSB0
 ```
