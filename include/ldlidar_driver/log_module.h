@@ -15,11 +15,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 **/
+
 #ifndef  __LOGMODULE_H_
 #define  __LOGMODULE_H_
 
-
-#define LINUX
 
 #define ENABLE_LOG_DIS_OUTPUT
 
@@ -32,7 +31,7 @@
 #include <chrono>
 #include <stdlib.h>
 
-#ifndef LINUX
+#ifndef __linux__
 #include <windows.h>
 #else
 //#include <pthread.h>
@@ -108,7 +107,7 @@ public:
   }
 };
 
-#ifndef LINUX
+#ifndef __linux__
 class LogOutputString :public ILogRealization {
 public:
   virtual void Initializion(const char* path = NULL) {
@@ -116,8 +115,17 @@ public:
   }
 
   virtual void LogPrintInf(const char* str) {
-    OutputDebugString((LPCTSTR)str);
-    OutputDebugString("\r\n");
+    //OutputDebugString((LPCTSTR)str); // 将字符串发送到调试器进行显示。
+    //OutputDebugString("\r\n");
+
+	printf("%s\r\n", str); // 将字符串发送到控制台显示
+  }
+
+  virtual void LogPrintData(const char* str) {
+    //OutputDebugString((LPCTSTR)str); // 将字符串发送到调试器进行显示。
+    //OutputDebugString("\r\n");
+
+	printf("%s\r\n", str); // 将字符串发送到控制台显示
   }
 
   ILOGFREE(LogOutputString)
@@ -186,7 +194,7 @@ private:
 
   static LogModule*  s_plog_module_;
 
-#ifndef LINUX
+#ifndef __linux__
     CRITICAL_SECTION   mutex_lock_;
 #else
     pthread_mutex_t    mutex_lock_;

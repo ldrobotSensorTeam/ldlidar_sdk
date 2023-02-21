@@ -39,6 +39,7 @@ enum {
   POINT_PER_PACK = 12,
 };
 
+#ifdef __linux__
 typedef struct __attribute__((packed)) {
   uint16_t distance;
   uint8_t intensity;
@@ -54,6 +55,27 @@ typedef struct __attribute__((packed)) {
   uint16_t timestamp;
   uint8_t crc8;
 } LiDARFrameType;
+#else
+
+#pragma pack(1)
+typedef struct {
+	uint16_t distance;
+	uint8_t intensity;
+} LidarPointStructType;
+
+typedef struct {
+	uint8_t header;
+	uint8_t ver_len;
+	uint16_t speed;
+	uint16_t start_angle;
+	LidarPointStructType point[POINT_PER_PACK];
+	uint16_t end_angle;
+	uint16_t timestamp;
+	uint8_t crc8;
+} LiDARFrameType;
+#pragma pack()
+
+#endif
 
 class LiPkg {
 public:

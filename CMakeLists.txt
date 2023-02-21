@@ -12,15 +12,6 @@ else()
 	message(STATUS "other platform: ${CMAKE_SYSTEM_NAME}")
 endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
-if(WIN32)
-	message(STATUS "Now is windows")
-elseif(APPLE)
-	message(STATUS "Now is Apple systens.")
-elseif(UNIX)
-	message(STATUS "Now is UNIX-like OS's.")
-endif()
-message(STATUS "###################################")
-
 
 if(${CMAKE_BUILD_TYPE} MATCHES  "Release")
   set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -Wall")

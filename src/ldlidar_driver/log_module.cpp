@@ -20,7 +20,7 @@
 #include <time.h>
 #include <string.h>
 
-#ifndef LINUX
+#ifndef __linux__
 #include <comutil.h>  
 #pragma comment(lib, "comsuppw.lib")
 #else
@@ -79,8 +79,8 @@ LogModule::LogModule() {
 	logInfo_.n_linenumber = -1;
 	logInfo_.str_filename = "";
 	logInfo_.str_funcname = "";
-#ifndef LINUX
-	p_realization = new LogOutputString();
+#ifndef __linux__
+	p_realization_ = new LogOutputString();
 #else
 	p_realization_ = new LogPrint();
 #endif
@@ -181,7 +181,7 @@ void LogModule::LogPrintOriginData(const char* format,...) {
 }
 
 void LogModule::InitLock() {
-#ifndef LINUX
+#ifndef __linux__
 	InitializeCriticalSection(&mutex_lock_);
 #else
   pthread_mutex_init(&mutex_lock_,NULL);
@@ -189,7 +189,7 @@ void LogModule::InitLock() {
 }
 
 void LogModule::RealseLock() {
-#ifndef LINUX
+#ifndef __linux__
 	DeleteCriticalSection(&mutex_lock_);
 #else
 	pthread_mutex_unlock(&mutex_lock_);
@@ -197,7 +197,7 @@ void LogModule::RealseLock() {
 }
 
 void LogModule::Lock() {
-#ifndef LINUX
+#ifndef __linux__
 	EnterCriticalSection(&mutex_lock_);
 #else
 	pthread_mutex_lock(&mutex_lock_);
@@ -205,7 +205,7 @@ void LogModule::Lock() {
 }
 
 void LogModule::UnLock() {
-#ifndef LINUX
+#ifndef __linux__
 	LeaveCriticalSection(&mutex_lock_);
 #else
 	pthread_mutex_unlock(&mutex_lock_);

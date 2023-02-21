@@ -26,6 +26,8 @@
 #include <iostream>
 #include <vector>
 
+#define LDLiDAR_SDK_VERSION_NUMBER   "3.1.0"
+
 #define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
 
 //  lidar error code definition
