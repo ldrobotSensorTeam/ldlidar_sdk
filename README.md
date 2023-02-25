@@ -7,6 +7,25 @@ This SDK is only applicable to the LiDAR products sold by Shenzhen LDROBOT Co., 
 |   LDROBOT LiDAR LD14   | 2D Triangle|
 
 ---
-## Instructions
-- [EN](./INSTRUCTIONS.en.md)
-- [CN](./INSTRUCTIONS.cn.md)
+## Get SDK
+- download package file or use git.
+```bash
+$ cd ~
+
+$ mkdir  ldlidar_ws
+
+$ cd ldlidar_ws
+
+$ git clone  https://github.com/ldrobotSensorTeam/ldlidar_sdk.git
+```
+
+---
+## Introduction to linux application example
+- [EN](./sample/linux/README.md)
+- [CN](./sample/linux/README_CN.md)
+
+---
+
+## Introduction to windows application example
+- [EN](./sample/windows/README.md)
+- [CN](./sample/windows/README_CN.md)

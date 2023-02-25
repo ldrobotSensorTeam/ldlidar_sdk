@@ -104,12 +104,11 @@ int main(int argc, char **argv) {
         LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%lu, stamp_end:%lu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
         //  output 2d point cloud data
-#if 0
         for (auto point : laser_scan_points) {
           LOG_INFO_LITE("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
               point.stamp, point.angle, point.distance, point.intensity);
         }
-#endif
+
         break;
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
@@ -131,50 +130,6 @@ int main(int argc, char **argv) {
 
   delete ldlidar_drv;
   ldlidar_drv = nullptr;
-
-#if 0
-	CommPort cp;
-
-	std::vector<PortInfo> info;
-
-
-	CommPort::availablePorts(info);
-	
-
-	PortParams pp;
-	pp.baudrate = (BaudRate)921600;
-    
-	cp.setPortParams(pp);
-
-	printf("available port:\n\n");
-	int n = 0;
-	for (auto p : info)
-	{
-		printf("[%d] %s,    %s,\n", n++, p.name.c_str(), p.description.c_str());
-	}
-
-	printf("\nplease select port:\n");
-
-	scanf_s("%d", &n);
-
-	if (n > info.size())
-	{
-		return -1;
-	}
-
-	
-	// cp.setReadCallback();
-
-	cp.open(info[n].name);
-
-	printf("set address\n");
-	
-
-	while (1);
-
-	cp.close();
-#endif
-
 
 	system("pause");
 	return 0;
