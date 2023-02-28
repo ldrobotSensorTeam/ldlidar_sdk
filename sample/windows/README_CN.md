@@ -10,3 +10,20 @@ cd build
 
 cmake -G "Visual Studio 15 2017 Win64" ../
 ```
+
+## 方法二： CMake  GUI
+
+- 在`sample/windows` 目录下创建`build` 文件夹
+
+	- ![](./pic/1.png)
+
+- 运行CMake GUI,完成相关配置，生成VC++工程并编译运行
+	- <img src="./pic/2.png" style="zoom:80%;" />
+
+	- <img src="./pic/3.png" style="zoom:80%;" />
+
+	- <img src="./pic/4.png" style="zoom:80%;" />
+
+	- <img src="./pic/5.png" style="zoom:80%;" />
+
+	- <img src="./pic/6.png" style="zoom:80%;" />

@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #endif
 
-//使用vswprintf会出现奔溃的情况如果，传入数据大于 VA_PARAMETER_MAX 就会出现崩溃
+/* 使用vswprintf会出现奔溃的情况如果，传入数据大于 VA_PARAMETER_MAX 就会出现崩溃 */
 #define  VA_PARAMETER_MAX  (1024 * 2)
 
 LogModule* LogModule::s_plog_module_ = NULL;
@@ -95,19 +95,18 @@ void LogModule::LogPrintInf(const char* format,...) {
 	Lock();
 	if (p_realization_) {
 		std::string str_temp;
-		// manufacture
 		str_temp.append("[LOG]");
-		//时间   [week month day hours:minutes:seconds year]
-		str_temp.append(GetFormatValue(GetCurrentTime()));
-    //时间戳 uint is seconds
+		// Time   [week month day hours:minutes:seconds year]
+		str_temp.append(GetFormatValue(GetCurrentISOTime()));
+        // Stamp uint is ns
 		str_temp.append(GetCurrentLocalTimeStamp());
-		//LogLevel
+		// LogLevel
 		str_temp.append(GetLevelValue(logInfo_.loglevel));
-		//文件名称
+		// File name
 		str_temp.append(GetFormatValue(logInfo_.str_filename));
-		// 函数名称
+		// Function name
 		str_temp.append(GetFormatValue(logInfo_.str_funcname));
-		//行号
+		// Line number
 		str_temp.append(GetFormatValue(logInfo_.n_linenumber));
 
 		va_list ptr;
@@ -129,9 +128,9 @@ void LogModule::LogPrintNoLocationInf(const char* format,...) {
 		std::string str_temp;
 		// manufacture
 		str_temp.append("[LOG]");
-		//时间   [week month day hours:minutes:seconds year]
-		str_temp.append(GetFormatValue(GetCurrentTime()));
-    //时间戳 uint is seconds
+		// time   [week month day hours:minutes:seconds year]
+		str_temp.append(GetFormatValue(GetCurrentISOTime()));
+        // stamp  uint is ns
 		str_temp.append(GetCurrentLocalTimeStamp());
 		//LogLevel
 		str_temp.append(GetLevelValue(logInfo_.loglevel));
@@ -157,7 +156,7 @@ void LogModule::LogPrintOriginData(const char* format,...) {
 		switch (logInfo_.loglevel) {
       case INFO_LEVEL: {
 				str_temp.append("[LOG]");
-				str_temp.append(GetFormatValue(GetCurrentTime()));
+				str_temp.append(GetFormatValue(GetCurrentISOTime()));
 				str_temp.append(GetCurrentLocalTimeStamp());
 				str_temp.append(GetLevelValue(logInfo_.loglevel));
 				break;
@@ -212,7 +211,7 @@ void LogModule::UnLock() {
 #endif
 }
 
-std::string LogModule::GetCurrentTime() {
+std::string LogModule::GetCurrentISOTime() {
 	std::string curr_time;
 #if 0
 	//Current date/time based on current time
@@ -237,7 +236,6 @@ std::string LogModule::GetCurrentTime() {
 }
 
 std::string LogModule::GetCurrentLocalTimeStamp() {
-	//// 获取系统时间戳 uint is seconds
 	std::string stamp_str;
 	std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
 		std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());

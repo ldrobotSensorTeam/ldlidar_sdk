@@ -20,7 +20,7 @@
 #define  __LOGMODULE_H_
 
 
-// #define ENABLE_LOG_DIS_OUTPUT
+#define ENABLE_LOG_DIS_OUTPUT
 
 #define ENABLE_CONSOLE_LOG_DISPALY
 
@@ -180,7 +180,7 @@ private:
 
   void UnLock();
 
-  std::string GetCurrentTime();
+  std::string GetCurrentISOTime();
 
   std::string GetCurrentLocalTimeStamp();
 
@@ -199,43 +199,40 @@ private:
 #endif
 };
 
-//// 以下功能支持所处文件、函数、行号信息的打印
-// #ifdef ENABLE_LOG_DIS_OUTPUT
+#ifdef ENABLE_LOG_DIS_OUTPUT
 #define  LOG(level,format,...)   LogModule::GetInstance(__FILE__, __FUNCTION__, __LINE__,level)->LogPrintInf(format,__VA_ARGS__);
 #define  LOG_DEBUG(format,...)   LOG(LogModule::DEBUG_LEVEL,format,__VA_ARGS__)
 #define  LOG_INFO(format,...)    LOG(LogModule::INFO_LEVEL,format,__VA_ARGS__)
 #define  LOG_WARN(format,...)    LOG(LogModule::WARNING_LEVEL,format,__VA_ARGS__)
 #define  LOG_ERROR(format,...)   LOG(LogModule::ERROR_LEVEL,format,__VA_ARGS__)
-// #else
-// #define  LOG_DEBUG(format,...)   do {} while(0)
-// #define  LOG_INFO(format,...)    do {} while(0)
-// #define  LOG_WARN(format,...)    do {} while(0)
-// #define  LOG_ERROR(format,...)   do {} while(0)
-// #endif
+#else
+#define  LOG_DEBUG(format,...)   do {} while(0)
+#define  LOG_INFO(format,...)    do {} while(0)
+#define  LOG_WARN(format,...)    do {} while(0)
+#define  LOG_ERROR(format,...)   do {} while(0)
+#endif
 
-//// 以下功能不支持所处文件、函数、行号信息的打印
-// #ifdef ENABLE_LOG_DIS_OUTPUT
+#ifdef ENABLE_LOG_DIS_OUTPUT
 #define  LOG_LITE(level,format,...)   LogModule::GetInstance(level)->LogPrintNoLocationInf(format,__VA_ARGS__);
 #define  LOG_DEBUG_LITE(format,...)   LOG_LITE(LogModule::DEBUG_LEVEL,format,__VA_ARGS__)       
 #define  LOG_INFO_LITE(format,...)    LOG_LITE(LogModule::INFO_LEVEL,format,__VA_ARGS__)        
 #define  LOG_WARN_LITE(format,...)    LOG_LITE(LogModule::WARNING_LEVEL,format,__VA_ARGS__)     
 #define  LOG_ERROR_LITE(format,...)   LOG_LITE(LogModule::ERROR_LEVEL,format,__VA_ARGS__)       
-// #else
-// #define  LOG_DEBUG_LITE(format,...)   do {} while(0)       
-// #define  LOG_INFO_LITE(format,...)    do {} while(0)        
-// #define  LOG_WARN_LITE(format,...)    do {} while(0)     
-// #define  LOG_ERROR_LITE(format,...)   do {} while(0)     
-// #endif
+#else
+#define  LOG_DEBUG_LITE(format,...)   do {} while(0)       
+#define  LOG_INFO_LITE(format,...)    do {} while(0)        
+#define  LOG_WARN_LITE(format,...)    do {} while(0)     
+#define  LOG_ERROR_LITE(format,...)   do {} while(0)     
+#endif
 
-//// 等同于printf和fprintf的功能
-// #ifdef ENABLE_LOG_DIS_OUTPUT
+#ifdef ENABLE_LOG_DIS_OUTPUT
 #define  LOG_PRINT(level,format,...)   LogModule::GetInstancePrintOriginData(level)->LogPrintOriginData(format,__VA_ARGS__);
 #define  LOG_DEBUG_PRINT(format,...)   LOG_PRINT(LogModule::DEBUG_LEVEL,format,__VA_ARGS__)       
 #define  LOG_INFO_PRINT(format,...)    LOG_PRINT(LogModule::INFO_LEVEL,format,__VA_ARGS__)     
-// #else
-// #define  LOG_DEBUG_PRINT(format,...)   do {} while(0)       
-// #define  LOG_INFO_PRINT(format,...)    do {} while(0)          
-// #endif
+#else
+#define  LOG_DEBUG_PRINT(format,...)   do {} while(0)       
+#define  LOG_INFO_PRINT(format,...)    do {} while(0)          
+#endif
 
 #endif//__LOGGER_MODULE_H__
 /********************* (C) COPYRIGHT DAVID HU *******END OF FILE ********/
