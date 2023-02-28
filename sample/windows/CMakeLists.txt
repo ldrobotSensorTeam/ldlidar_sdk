@@ -8,6 +8,7 @@ include_directories(
 
 add_executable(demo 
   ${PROJECT_SOURCE_DIR}/windemo.cpp 
+  ${PROJECT_SOURCE_DIR}/../../src/ldlidar_driver.cpp
   ${PROJECT_SOURCE_DIR}/../../src/ldlidar_driver_win.cpp
   ${PROJECT_SOURCE_DIR}/../../src/serial_interface_win.cpp
   ${PROJECT_SOURCE_DIR}/../../src/lipkg.cpp

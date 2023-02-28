@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-#include "ldlidar_driver/ldlidar_driver.h"
+#include "ldlidar_driver/ldlidar_driver_linux.h"
 
 uint64_t GetTimestamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
@@ -99,36 +99,36 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
   
-  ldlidar::LDLidarDriver* node = new ldlidar::LDLidarDriver();
+  ldlidar::LDLidarDriverLinuxInterface* lidar_drv = new ldlidar::LDLidarDriverLinuxInterface();
   
-  LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
+  LOG_INFO("LDLiDAR SDK Pack Version is %s", lidar_drv->GetLidarSdkVersionNumber().c_str());
 
-  node->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
+  lidar_drv->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
 
-  node->EnableFilterAlgorithnmProcess(true);
+  lidar_drv->EnableFilterAlgorithnmProcess(true);
 
-  if (node->Start(ldlidar_type_dest, ldlidar_serial_port_name, ldlidar_serial_baudrate_val)) {
-    LOG_INFO("ldlidar node start is success","");
+  if (lidar_drv->Start(ldlidar_type_dest, ldlidar_serial_port_name, ldlidar_serial_baudrate_val)) {
+    LOG_INFO("ldlidar lidar_drv start is success","");
     // LidarPowerOn();
   } else {
-    LOG_ERROR("ldlidar node start is fail","");
+    LOG_ERROR("ldlidar lidar_drv start is fail","");
     exit(EXIT_FAILURE);
   }
 
-  if (node->WaitLidarCommConnect(3500)) {
+  if (lidar_drv->WaitLidarCommConnect(3500)) {
     LOG_INFO("ldlidar communication is normal.","");
   } else {
     LOG_ERROR("ldlidar communication is abnormal.","");
-    node->Stop();
+    lidar_drv->Stop();
   }
   
   ldlidar::Points2D laser_scan_points;
-  while (ldlidar::LDLidarDriver::IsOk()) {
+  while (ldlidar::LDLidarDriverLinuxInterface::IsOk()) {
 
-    switch (node->GetLaserScanData(laser_scan_points, 1500)){
+    switch (lidar_drv->GetLaserScanData(laser_scan_points, 1500)){
       case ldlidar::LidarStatus::NORMAL: {
         double lidar_scan_freq = 0;
-        node->GetLidarScanFreq(lidar_scan_freq);
+        lidar_drv->GetLidarScanFreq(lidar_scan_freq);
 #ifdef __LP64__
         LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%lu, stamp_end:%lu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
         LOG_ERROR_LITE("point cloud data publish time out, please check your lidar device.","");
-        node->Stop();
+        lidar_drv->Stop();
         break;
       }
       case ldlidar::LidarStatus::DATA_WAIT: {
@@ -165,11 +165,11 @@ int main(int argc, char **argv) {
     usleep(1000*166);  // sleep 166ms , 6hz
   }
 
-  node->Stop();
+  lidar_drv->Stop();
   // LidarPowerOff();
 
-  delete node;
-  node = nullptr;
+  delete lidar_drv;
+  lidar_drv = nullptr;
 
   return 0;
 }

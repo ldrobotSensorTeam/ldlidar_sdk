@@ -22,10 +22,7 @@
 
 namespace ldlidar {
 
-bool LDLidarDriverWinInterface::is_ok_ = false;
-
 LDLidarDriverWinInterface::LDLidarDriverWinInterface() : 
-  sdk_pack_version_(LDLiDAR_SDK_VERSION_NUMBER),
   is_start_flag_(false),
   comm_pkg_(new LiPkg()),
   comm_port_handle_(new SerialInterfaceWin()) {
@@ -41,10 +38,6 @@ LDLidarDriverWinInterface::~LDLidarDriverWinInterface() {
   if (comm_port_handle_ != nullptr) {
     delete comm_port_handle_;
   }
-}
-
-std::string LDLidarDriverWinInterface::GetLidarSdkVersionNumber(void) {
-  return sdk_pack_version_;
 }
 
 bool LDLidarDriverWinInterface::Start(LDType product_name, 

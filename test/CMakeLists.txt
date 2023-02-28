@@ -31,18 +31,28 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../include/
 )
 
-file(GLOB  LDLIDAR_DRI_CORE    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_driver/*.cpp)
+set(LDLIDAR_DRIVER_SOURCE_LINUX
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_driver.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/ldlidar_driver_linux.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/lipkg.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/log_module.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/network_socket_interface_linux.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/serial_interface_linux.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/sl_transform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/slbf.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src/tofbf.cpp
+)
 
 add_executable(${PROJECT_NAME}_node 
   ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp
 )
 
 add_library(ldlidar_driver_static STATIC 
-  ${LDLIDAR_DRI_CORE} 
+  ${LDLIDAR_DRIVER_SOURCE_LINUX} 
 )
 
 add_library(ldlidar_driver_shared SHARED 
-  ${LDLIDAR_DRI_CORE} 
+  ${LDLIDAR_DRIVER_SOURCE_LINUX} 
 )
 
 # rename library name

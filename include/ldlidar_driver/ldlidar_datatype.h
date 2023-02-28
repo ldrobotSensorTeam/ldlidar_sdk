@@ -25,8 +25,9 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
-#define LDLiDAR_SDK_VERSION_NUMBER   "3.1.2"
+#define LDLiDAR_SDK_VERSION_NUMBER   "3.2.0"
 
 #define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
 

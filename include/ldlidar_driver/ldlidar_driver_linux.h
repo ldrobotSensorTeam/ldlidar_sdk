@@ -18,22 +18,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LDLIDAR_DRIVER_SDK_WIN_INTERFACE_H__
-#define __LDLIDAR_DRIVER_SDK_WIN_INTERFACE_H__
+#ifndef __LDLIDAR_DRIVER_SDK_LINUX_INTERFACE_H__
+#define __LDLIDAR_DRIVER_SDK_LINUX_INTERFACE_H__
 
 #include "ldlidar_driver/ldlidar_driver.h"
 #include "ldlidar_driver/lipkg.h"
+#include "ldlidar_driver/serial_interface_linux.h"
+#include "ldlidar_driver/network_socket_interface_linux.h"
 #include "ldlidar_driver/log_module.h"
-#include "ldlidar_driver/serial_interface_win.h"
 
 namespace ldlidar {
 
-class LDLidarDriverWinInterface : public LDLidarDriver {
-public:
-  LDLidarDriverWinInterface();
+typedef enum CommunicationMode {
+  COMM_NO_NULL,
+  COMM_SERIAL_MODE, /* serial communication */
+  COMM_UDP_CLIENT_MODE, /* network communication for UDP client */
+  COMM_UDP_SERVER_MODE, /* network communication for UDP server */
+  COMM_TCP_CLIENT_MODE, /* network communication for TCP client */
+  COMM_TCP_SERVER_MODE  /* network communication for TCP server */
+}CommunicationModeType;
 
-  ~LDLidarDriverWinInterface();
-  
+class LDLidarDriverLinuxInterface : public LDLidarDriver {
+public:
+  LDLidarDriverLinuxInterface();
+
+  ~LDLidarDriverLinuxInterface();
+
   /**
    * @brief start lidar device handle node
    * @param product_name
@@ -50,8 +60,14 @@ public:
    *   value is false, start is failed.
   */
   bool Start(LDType product_name, 
-              std::string& serial_port_name, 
-              PortParams& port_params);
+            std::string serial_port_name, 
+            uint32_t serial_baudrate = 115200,
+            CommunicationModeType comm_mode = COMM_SERIAL_MODE);
+
+  bool Start(LDType product_name, 
+            const char* server_ip, 
+            const char* server_port,
+            CommunicationModeType comm_mode = COMM_TCP_CLIENT_MODE);
   
   bool Stop(void);
   
@@ -107,9 +123,11 @@ public:
 private:
   bool is_start_flag_;
   LiPkg* comm_pkg_;
-  SerialInterfaceWin* comm_port_handle_;
+  SerialInterfaceLinux* comm_serial_;
+  TCPSocketInterfaceLinux* comm_tcp_network_;
+  UDPSocketInterfaceLinux* comm_udp_network_;
   std::function<uint64_t(void)> register_get_timestamp_handle_;
-  std::chrono::steady_clock::time_point last_pubdata_times_;
+  std::chrono::_V2::steady_clock::time_point last_pubdata_times_;
 };
 
 } // namespace ldlidar

@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "ldlidar_driver/ldlidar_driver.h"
+#include "ldlidar_driver/ldlidar_driver_linux.h"
 
 #ifdef USE_WIRINGPI
 #include <wiringPi.h>
@@ -66,17 +66,17 @@ int function_main(int argc, char **argv) {
   
   if (argc != 2) {
     LOG_INFO("cmd error","");
-    LOG_INFO("please input: ./ldlidar_sl_node <serial_number>","");
+    LOG_INFO("please input: ./test_node <lidar type> <serial number>","");
     LOG_INFO("example:","");
-    LOG_INFO("./ldlidar_sl_node /dev/ttyUSB0","");
-    LOG_INFO("or","");
-    LOG_INFO("./ldlidar_sl_node /dev/ttyS0","");
+    LOG_INFO("./test_node LD14 /dev/ttyUSB0","");
+    LOG_INFO("./test_node LD06 /dev/ttyUSB0","");
+    LOG_INFO("./test_node LD19 /dev/ttyUSB0","");
     exit(EXIT_FAILURE);
   }
   
   std::string port_name(argv[1]);
   
-  ldlidar::LDLidarDriver* node = new ldlidar::LDLidarDriver();
+  ldlidar::LDLidarDriverLinuxInterface* node = new ldlidar::LDLidarDriverLinuxInterface();
   
   LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
 
