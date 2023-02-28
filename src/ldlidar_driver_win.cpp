@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_driver_win.h"
+#include "ldlidar_driver/ldlidar_driver_win.h"
 
 namespace ldlidar {
 
@@ -28,7 +28,7 @@ LDLidarDriverWinInterface::LDLidarDriverWinInterface() :
   sdk_pack_version_(LDLiDAR_SDK_VERSION_NUMBER),
   is_start_flag_(false),
   comm_pkg_(new LiPkg()),
-  comm_port_handle_(new CommPort()) {
+  comm_port_handle_(new SerialInterfaceWin()) {
   
   last_pubdata_times_ = std::chrono::steady_clock::now();
 }

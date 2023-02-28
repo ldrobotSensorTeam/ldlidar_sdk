@@ -38,27 +38,34 @@ uint64_t GetTimestamp(void) {
 //   // ...
 // }
 
+struct LdsInfoStruct {
+  std::string ldtype_str;
+  ldlidar::LDType ldtype_enum;
+  uint32_t baudrate;
+};
+
+LdsInfoStruct LdsInfoArrary[3] = {
+  {"LD14", ldlidar::LDType::LD_14, 115200},
+  {"LD06", ldlidar::LDType::LD_06, 230400},
+  {"LD19", ldlidar::LDType::LD_19, 230400},
+};
+
 ldlidar::LDType GetLdsType(std::string in_str) {
-  if (!strcmp(in_str.c_str(),"LD14")) {
-    return ldlidar::LDType::LD_14;
-  } else if (!strcmp(in_str.c_str(),"LD06")) {
-    return ldlidar::LDType::LD_06;
-  } else if (!strcmp(in_str.c_str(),"LD19")) {
-    return ldlidar::LDType::LD_19;
-  } else {
-    return ldlidar::LDType::NO_VER;
+  for (auto item : LdsInfoArrary) {
+    if (!strcmp(in_str.c_str(), item.ldtype_str.c_str())) {
+      return item.ldtype_enum;
+    }
   }
+  return ldlidar::LDType::NO_VER;
 }
 
 uint32_t GetLdsSerialPortBaudrateValue(std::string in_str) {
-  if (!strcmp(in_str.c_str(),"LD14")) {
-    return 115200;
-  } else if ((!strcmp(in_str.c_str(),"LD06")) || 
-    (!strcmp(in_str.c_str(),"LD19"))) {
-    return 230400;
-  } else {
-    return 0;
+  for (auto item : LdsInfoArrary) {
+    if (!strcmp(in_str.c_str(), item.ldtype_str.c_str())) {
+      return item.baudrate;
+    }
   }
+  return 0;
 }
 
 int main(int argc, char **argv) {
@@ -68,8 +75,8 @@ int main(int argc, char **argv) {
     LOG_INFO("please input: ./ldlidar <lidar type> <serial number>","");
     LOG_INFO("example:","");
     LOG_INFO("./ldlidar LD14 /dev/ttyUSB0","");
-    LOG_INFO("or","");
-    LOG_INFO("./ldlidar LD14 /dev/ttyS0","");
+    LOG_INFO("./ldlidar LD06 /dev/ttyUSB0","");
+    LOG_INFO("./ldlidar LD19 /dev/ttyUSB0","");
     exit(EXIT_FAILURE);
   }
   

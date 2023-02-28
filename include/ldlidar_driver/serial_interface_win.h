@@ -1,5 +1,5 @@
 /**
- * @file serial_interface_windows.h
+ * @file serial_interface_win.h
  * @author LDRobot (support@ldrobot.com)
  * @brief  Win32 serial port App
  * @version 0.1
@@ -76,10 +76,10 @@ struct PortParams {
   FlowControl flowControl = FlowControl::NoFlowControl;
 };
 
-class CommPort {
+class SerialInterfaceWin {
  public:
-  CommPort();
-  ~CommPort();
+  SerialInterfaceWin();
+  ~SerialInterfaceWin();
 
   static bool availablePorts(std::vector<PortInfo> &availabelPortInfo);
   bool open(std::string port_name);
@@ -106,7 +106,7 @@ class CommPort {
   bool mIsOpened;
   HANDLE mComHandle;
   std::thread *mRxThread;
-  static void rxThreadProc(CommPort *pClass);
+  static void rxThreadProc(SerialInterfaceWin *pClass);
   size_t mByteToRead;
   long long mRxCounter;
   long long mTxCounter;

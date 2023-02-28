@@ -26,15 +26,15 @@
 #include <iostream>
 #include <vector>
 
-#define LDLiDAR_SDK_VERSION_NUMBER   "3.1.1"
+#define LDLiDAR_SDK_VERSION_NUMBER   "3.1.2"
 
 #define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
 
 //  lidar error code definition
 #define LIDAR_NO_ERROR                     0x00
-#define LIDAR_ERROR_BLOCKING               0x01  //  雷达堵转
-#define LIDAR_ERROR_OCCLUSION              0x02  //  雷达遮挡
-#define LIDAR_ERROR_BLOCKING_AND_OCCLUSION 0x03  //  雷达堵转且遮挡
+#define LIDAR_ERROR_BLOCKING               0x01  /* 雷达堵转 */  
+#define LIDAR_ERROR_OCCLUSION              0x02  /* 雷达遮挡 */
+#define LIDAR_ERROR_BLOCKING_AND_OCCLUSION 0x03  /*  雷达堵转且遮挡 */ 
 // end lidar error code definition
 
 namespace ldlidar {
@@ -50,11 +50,11 @@ enum class LDType {
 };
 
 enum class LidarStatus {
-  NORMAL,     //  雷达正常,可获取点云数据
-  ERROR,      //  表明雷达出现异常错误，可获取雷达反馈的错误码了解具体错误
-  DATA_TIME_OUT, //  雷达点云数据包发布超时
-  DATA_WAIT,  //  雷达点云数据包发布等待
-  STOP,       //  雷达停止转动、未启动Driver 
+  NORMAL,             /* 雷达正常,可获取点云数据 */  
+  ERROR,              /* 表明雷达出现异常错误，可获取雷达反馈的错误码了解具体错误 */  
+  DATA_TIME_OUT,      /* 雷达点云数据包发布超时 */  
+  DATA_WAIT,          /* 雷达点云数据包发布等待 */  
+  STOP,               /* 雷达停止转动、未启动Driver */  
 };
 
 struct PointData {

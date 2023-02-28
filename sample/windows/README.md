@@ -3,10 +3,10 @@
 
 ## Method 1: Command line mode
 - Open the powershell terminal in the 'sample/windows' directory and run the following command to create a C++ project in the' Visual Studio 15 2017 Win64 'environment as an example.
-```ps1
+``` powershell
 mkdir build
 
 cd build
 
 cmake -G "Visual Studio 15 2017 Win64" .. /
-` ` `
+```

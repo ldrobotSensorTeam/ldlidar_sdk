@@ -3,7 +3,7 @@
 
 ## 方法一：命令行方式
 - 在`sample/windows`目录下打开powershell终端，以创建`Visual Studio 15 2017 Win64`环境下的C++工程为例，运行如下命令。
-```ps1
+```powershell
 mkdir build   # create `build` folder.
 
 cd build

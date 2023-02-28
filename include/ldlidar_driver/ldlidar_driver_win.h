@@ -25,7 +25,7 @@
 
 #include "ldlidar_driver/lipkg.h"
 #include "ldlidar_driver/log_module.h"
-#include "commport.h"
+#include "ldlidar_driver/serial_interface_win.h"
 
 namespace ldlidar {
 
@@ -116,7 +116,7 @@ private:
   static bool is_ok_;
   bool is_start_flag_;
   LiPkg* comm_pkg_;
-  CommPort* comm_port_handle_;
+  SerialInterfaceWin* comm_port_handle_;
   
   std::function<uint64_t(void)> register_get_timestamp_handle_;
   std::chrono::steady_clock::time_point last_pubdata_times_;

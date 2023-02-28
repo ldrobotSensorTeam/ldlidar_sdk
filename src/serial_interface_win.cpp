@@ -1,5 +1,5 @@
 /**
- * @file serial_interface_windows.cpp
+ * @file serial_interface_win.cpp
  * @author LDRobot (support@ldrobot.com)
  * @brief  Win32 serial port App
  * @version 0.1
@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "commport.h"
+#include "ldlidar_driver/serial_interface_win.h"
 #include "ldlidar_driver/log_module.h"
 
 #include <Cfgmgr32.h>
@@ -34,7 +34,7 @@
 
 using namespace std;
 
-CommPort::CommPort()
+SerialInterfaceWin::SerialInterfaceWin()
     : mIsOpened(false),
       mByteToRead(4096),
       mRxCounter(0),
@@ -50,7 +50,7 @@ CommPort::CommPort()
   mOverlappedRecv.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
-CommPort::~CommPort() {
+SerialInterfaceWin::~SerialInterfaceWin() {
   if (mOverlappedRecv.hEvent != INVALID_HANDLE_VALUE) {
     CloseHandle(mOverlappedRecv.hEvent);
     mOverlappedRecv.hEvent = INVALID_HANDLE_VALUE;
@@ -73,7 +73,7 @@ std::string wcharToChar(const wchar_t *wp, UINT encode = CP_ACP) {
   return str;
 }
 
-bool CommPort::availablePorts(vector<PortInfo> &availabelPortInfo) {
+bool SerialInterfaceWin::availablePorts(vector<PortInfo> &availabelPortInfo) {
   DWORD dwGuids = 0;
   TCHAR propBuf[1024];
   PortInfo portInfo;
@@ -145,7 +145,7 @@ bool CommPort::availablePorts(vector<PortInfo> &availabelPortInfo) {
   return true;
 }
 
-bool CommPort::open(string portName) {
+bool SerialInterfaceWin::open(string portName) {
   if (mIsOpened) close();
 
   portParams.portName = portName;
@@ -213,7 +213,7 @@ bool CommPort::open(string portName) {
   return true;
 }
 
-bool CommPort::close() {
+bool SerialInterfaceWin::close() {
   if (!mIsOpened) return true;
 
   mIsOpened = false;
@@ -227,8 +227,6 @@ bool CommPort::close() {
   try {
     if (mRxThread->joinable()) mRxThread->join();
   } catch (const std::system_error &e) {
-    // std::cout << "Caught system_error with code " << e.code() << " meaning "
-    //           << e.what() << '\n';
     LOG_INFO("Caught system_error with code:%d, meaning:%s", e.code(), e.what());
   }
   delete mRxThread;
@@ -237,9 +235,9 @@ bool CommPort::close() {
   return true;
 }
 
-int CommPort::readAll() { return 0; }
+int SerialInterfaceWin::readAll() { return 0; }
 
-bool CommPort::write(const char *txBuf, uint32_t txBufLen) {
+bool SerialInterfaceWin::write(const char *txBuf, uint32_t txBufLen) {
   DWORD txLen = 0;
   if (mIsOpened) {
     ResetEvent(mOverlappedSend.hEvent);
@@ -259,13 +257,13 @@ bool CommPort::write(const char *txBuf, uint32_t txBufLen) {
   return false;
 }
 
-void CommPort::setPortParams(PortParams params) {
+void SerialInterfaceWin::setPortParams(PortParams params) {
   memcpy(&portParams, &params, sizeof(params));
 }
 
-PortParams CommPort::currPortParams(void) { return portParams; }
+PortParams SerialInterfaceWin::currPortParams(void) { return portParams; }
 
-void CommPort::rxThreadProc(CommPort *pClass) {
+void SerialInterfaceWin::rxThreadProc(SerialInterfaceWin *pClass) {
   char *rxBuf = new char[pClass->mMaxBuffSize + 1];
   ResetEvent(pClass->mOverlappedRecv.hEvent);
   LOG_INFO("rx thread start...","");
@@ -285,10 +283,9 @@ void CommPort::rxThreadProc(CommPort *pClass) {
       long last_error = GetLastError();
       switch (last_error) {
         case ERROR_IO_PENDING: {
-          if (WaitForSingleObject(pClass->mOverlappedRecv.hEvent, INFINITE) ==
-              WAIT_OBJECT_0) {
-            GetOverlappedResult(pClass->mComHandle, &pClass->mOverlappedRecv,
-                                (LPDWORD)&readed, FALSE);
+          if (WaitForSingleObject(
+            pClass->mOverlappedRecv.hEvent, INFINITE) == WAIT_OBJECT_0) {
+            GetOverlappedResult(pClass->mComHandle, &pClass->mOverlappedRecv, (LPDWORD)&readed, FALSE);
             if (readed) {
               pClass->mRxCounter += readed;
               // callback
@@ -299,12 +296,12 @@ void CommPort::rxThreadProc(CommPort *pClass) {
           }
           break;
         }
-        case ERROR_INVALID_PARAMETER:  /// 系统错误 erroe code:87
-        case ERROR_ACCESS_DENIED:      /// 拒绝访问 erroe code:5
-        case ERROR_INVALID_HANDLE:     /// 打开串口失败 erroe code:6
-        case ERROR_BAD_COMMAND:  /// 连接过程中非法断开 erroe code:22
+        case ERROR_INVALID_PARAMETER:  /* 系统错误 erroe code:87 */ 
+        case ERROR_ACCESS_DENIED:      /* 拒绝访问 erroe code:5 */
+        case ERROR_INVALID_HANDLE:     /* 打开串口失败 erroe code:6 */ 
+        case ERROR_BAD_COMMAND:       /* 连接过程中非法断开 erroe code:22 */ 
         {
-          /// 不能再这里及回调函数中调用close，因为close中有join。在当前线程中join自己，会造成死锁
+          /* 不能再这里及回调函数中调用close，因为close中有join。在当前线程中join自己，会造成死锁 */ 
           if (pClass->commErrorHandle != nullptr)
             pClass->commErrorHandle(error_code[last_error]);
           pClass->mRxThreadRunFlag = false;
@@ -312,7 +309,7 @@ void CommPort::rxThreadProc(CommPort *pClass) {
           break;
         }
 
-        default:  /// 发生其他错误，其中有串口读写中断开串口连接的错误（错误22）
+        default:  /*  发生其他错误，其中有串口读写中断开串口连接的错误（错误22） */ 
         {
           if (pClass->commErrorHandle != nullptr)
             pClass->commErrorHandle("Unknow error");
@@ -326,5 +323,4 @@ void CommPort::rxThreadProc(CommPort *pClass) {
 
   delete[] rxBuf;
 }
-
 /********************* (C) COPYRIGHT LD Robot *******END OF FILE ********/

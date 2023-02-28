@@ -18,7 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ldlidar_driver_win.h"
+#include "ldlidar_driver/ldlidar_driver_win.h"
 
 uint64_t GetTimestamp(void) {
   std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 	ldlidar::LDType lidar_type_number = inf_array[product_index].type_number;
 
 	std::vector<PortInfo> info;
-	CommPort::availablePorts(info);  // get serial port device info
+	SerialInterfaceWin::availablePorts(info);  // get serial port device info
 	printf("\nAvailable port:\n\n");
 	int port_index = 0;
 	for (auto p : info) {
