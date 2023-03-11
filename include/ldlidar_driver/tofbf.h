@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-10-28
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.

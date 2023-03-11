@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-11-08
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
   }
   
   std::string ldlidar_type_str(argv[1]);
-  std::string ldlidar_serial_port_name(argv[2]);
+  std::string serial_port_name(argv[2]);
 
   // select ldrobot lidar sensor type.
   ldlidar::LDType ldlidar_type_dest;
@@ -92,38 +92,45 @@ int main(int argc, char **argv) {
   }
 
   // if use serial communications interface, as select serial baudrate paramters.
-  uint32_t ldlidar_serial_baudrate_val;
-  ldlidar_serial_baudrate_val = GetLdsSerialPortBaudrateValue(ldlidar_type_str);
-  if (!ldlidar_serial_baudrate_val) {
+  uint32_t serial_baudrate_val;
+  serial_baudrate_val = GetLdsSerialPortBaudrateValue(ldlidar_type_str);
+  if (!serial_baudrate_val) {
     LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
     exit(EXIT_FAILURE);
   }
   
-  ldlidar::LDLidarDriverLinuxInterface* lidar_drv = new ldlidar::LDLidarDriverLinuxInterface();
+  ldlidar::LDLidarDriverLinuxInterface* lidar_drv = 
+    ldlidar::LDLidarDriverLinuxInterface::Create();
   
   LOG_INFO("LDLiDAR SDK Pack Version is %s", lidar_drv->GetLidarSdkVersionNumber().c_str());
 
   lidar_drv->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
 
-  lidar_drv->EnableFilterAlgorithnmProcess(true);
+  lidar_drv->EnablePointCloudDataFilter(true);
 
-  if (lidar_drv->Start(ldlidar_type_dest, ldlidar_serial_port_name, ldlidar_serial_baudrate_val)) {
-    LOG_INFO("ldlidar lidar_drv start is success","");
+  if (lidar_drv->Connect(ldlidar_type_dest, serial_port_name, serial_baudrate_val)) {
+    LOG_INFO("ldlidar serial connect is success","");
     // LidarPowerOn();
   } else {
-    LOG_ERROR("ldlidar lidar_drv start is fail","");
+    LOG_ERROR("ldlidar serial connect is fail","");
     exit(EXIT_FAILURE);
   }
 
-  if (lidar_drv->WaitLidarCommConnect(3500)) {
+  if (lidar_drv->WaitLidarComm(3500)) {
     LOG_INFO("ldlidar communication is normal.","");
   } else {
     LOG_ERROR("ldlidar communication is abnormal.","");
-    lidar_drv->Stop();
+    lidar_drv->Disconnect();
+  }
+
+  if (lidar_drv->Start()) {
+    LOG_INFO_LITE("ldlidar driver start is success.","");
+  } else {
+    LOG_ERROR_LITE("ldlidar driver start is fail.","");
   }
   
   ldlidar::Points2D laser_scan_points;
-  while (ldlidar::LDLidarDriverLinuxInterface::IsOk()) {
+  while (ldlidar::LDLidarDriverLinuxInterface::Ok()) {
 
     switch (lidar_drv->GetLaserScanData(laser_scan_points, 1500)){
       case ldlidar::LidarStatus::NORMAL: {
@@ -166,10 +173,10 @@ int main(int argc, char **argv) {
   }
 
   lidar_drv->Stop();
+  lidar_drv->Disconnect();
   // LidarPowerOff();
 
-  delete lidar_drv;
-  lidar_drv = nullptr;
+  ldlidar::LDLidarDriverLinuxInterface::Destory(lidar_drv);
 
   return 0;
 }

@@ -7,7 +7,7 @@
  * @version 1.0
  * @date 2023-2-20
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,32 +74,38 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  ldlidar::LDLidarDriverWinInterface* ldlidar_drv =
-      new ldlidar::LDLidarDriverWinInterface();
+  ldlidar::LDLidarDriverWinInterface* ldlidar_drv = 
+    ldlidar::LDLidarDriverWinInterface::Create();
 
   LOG_INFO_LITE("LDLiDAR SDK Pack Version is %s",
                 ldlidar_drv->GetLidarSdkVersionNumber().c_str());
 
   ldlidar_drv->RegisterGetTimestampFunctional(std::bind(&GetTimestamp));
 
-  ldlidar_drv->EnableFilterAlgorithnmProcess(true);
+  ldlidar_drv->EnablePointCloudDataFilter(true);
 
-  if (ldlidar_drv->Start(lidar_type_number, info[port_index].name, port_param)) {
-    LOG_INFO_LITE("ldlidar node start is success", "");
+  if (ldlidar_drv->Connect(lidar_type_number, info[port_index].name, port_param)) {
+    LOG_INFO_LITE("ldlidar serial connect is success", "");
   } else {
-    LOG_ERROR_LITE("ldlidar node start is fail", "");
+    LOG_ERROR_LITE("ldlidar serial connect is fail", "");
     exit(EXIT_FAILURE);
   }
 
-  if (ldlidar_drv->WaitLidarCommConnect(3500)) {
+  if (ldlidar_drv->WaitLidarComm(3500)) {
     LOG_INFO_LITE("ldlidar communication is normal.", "");
   } else {
     LOG_ERROR_LITE("ldlidar communication is abnormal.", "");
-    ldlidar_drv->Stop();
+    ldlidar_drv->Disconnect();
+  }
+
+  if (ldlidar_drv->Start()) {
+    LOG_INFO_LITE("ldlidar driver start is success.","");
+  } else {
+    LOG_ERROR_LITE("ldlidar driver start is fail.","");
   }
 
   ldlidar::Points2D laser_scan_points;
-  while (ldlidar::LDLidarDriverWinInterface::IsOk()) {
+  while (ldlidar::LDLidarDriverWinInterface::Ok()) {
     switch (ldlidar_drv->GetLaserScanData(laser_scan_points, 1500)) {
       case ldlidar::LidarStatus::NORMAL: {
         double lidar_scan_freq = 0;
@@ -147,9 +153,9 @@ int main(int argc, char** argv) {
   }
 
   ldlidar_drv->Stop();
+  ldlidar_drv->Disconnect();
 
-  delete ldlidar_drv;
-  ldlidar_drv = nullptr;
+  ldlidar::LDLidarDriverWinInterface::Destory(ldlidar_drv);
 
   system("pause");
   return 0;

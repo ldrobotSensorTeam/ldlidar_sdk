@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-11-09
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #include <vector>
 #include <string>
 
-#define LDLiDAR_SDK_VERSION_NUMBER   "3.2.0"
+#define LDLiDAR_SDK_VERSION_NUMBER   "3.3.0"
 
 #define ANGLE_TO_RADIAN(angle) ((angle)*3141.59 / 180000)
 
@@ -42,7 +42,8 @@ namespace ldlidar {
 
 enum class LDType {
   NO_VER,
-  LD_14, 
+  LD_14,
+  LD_14P,
   LD_06,
   LD_19,
   STL_06P,

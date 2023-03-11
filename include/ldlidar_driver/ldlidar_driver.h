@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-05-12
  *
- * @copyright Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,9 @@ public:
 
   std::string GetLidarSdkVersionNumber(void);
   
-  virtual void EnableFilterAlgorithnmProcess(bool is_enable) = 0;
+  virtual void EnablePointCloudDataFilter(bool is_enable) = 0;
 
-  virtual bool WaitLidarCommConnect(int64_t timeout) = 0;
+  virtual bool WaitLidarComm(int64_t timeout) = 0;
 
   virtual LidarStatus GetLaserScanData(Points2D& dst, int64_t timeout) = 0;
 
@@ -50,13 +50,38 @@ public:
 
   virtual uint8_t GetLidarErrorCode(void) = 0;
 
-  static bool IsOk();
+  /**
+   * @brief Start lidar driver node
+   * @param none
+   * @retval value is true, start is success;
+   *   value is false, start is failed.
+  */
+  virtual bool Start(void) = 0;
+  
+  /**
+   * @brief Stop lidar driver node
+   * @param none
+   * @retval value is true, stop is success;
+   *  value is false, stop is failed.
+  */
+  virtual bool Stop(void) = 0;
 
-  static void SetIsOkStatus(bool status);
+  /**
+   * @brief Get SDK(ldlidar driver) running status.
+  */
+  static bool Ok();
+
+  /**
+   * @brief Set SDK(ldlidar driver) running status.
+  */
+  static void SetLidarDriverStatus(bool status);
+
+protected:
+  bool is_start_flag_;
+  bool is_connect_flag_;
 
 private:
   std::string sdk_pack_version_;
-  bool is_start_flag_;
   static bool is_ok_;
 };
 

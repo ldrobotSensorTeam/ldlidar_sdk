@@ -1,13 +1,14 @@
 /**
  * @file lipkg.h
  * @author LDRobot (support@ldrobot.com)
+ *         David Hu (hmd_hubei_cn@163.com)
  * @brief  LiDAR data protocol processing App
  *         This code is only applicable to LDROBOT LiDAR LD00 LD03 LD08 LD14
  * products sold by Shenzhen LDROBOT Co., LTD
- * @version 0.1
- * @date 2021-11-09
+ * @version 1.0
+ * @date 2023-03-12
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +19,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __LIPKG_H
-#define __LIPKG_H
+#ifndef __LDLIDAR_DATAPROCESS_H__
+#define __LDLIDAR_DATAPROCESS_H__
 
 #include <string.h>
 
@@ -30,58 +31,15 @@
 #include "ldlidar_driver/slbf.h"
 #include "ldlidar_driver/sl_transform.h"
 #include "ldlidar_driver/tofbf.h"
+#include "ldlidar_driver/ldlidar_protocol.h"
 
 namespace ldlidar {
 
-enum {
-  PKG_HEADER = 0x54,
-  PKG_VER_LEN = 0x2C,
-  POINT_PER_PACK = 12,
-};
-
-#ifdef __linux__
-typedef struct __attribute__((packed)) {
-  uint16_t distance;
-  uint8_t intensity;
-} LidarPointStructType;
-
-typedef struct __attribute__((packed)) {
-  uint8_t header;
-  uint8_t ver_len;
-  uint16_t speed;
-  uint16_t start_angle;
-  LidarPointStructType point[POINT_PER_PACK];
-  uint16_t end_angle;
-  uint16_t timestamp;
-  uint8_t crc8;
-} LiDARFrameType;
-#else
-
-#pragma pack(1)
-typedef struct {
-	uint16_t distance;
-	uint8_t intensity;
-} LidarPointStructType;
-
-typedef struct {
-	uint8_t header;
-	uint8_t ver_len;
-	uint16_t speed;
-	uint16_t start_angle;
-	LidarPointStructType point[POINT_PER_PACK];
-	uint16_t end_angle;
-	uint16_t timestamp;
-	uint8_t crc8;
-} LiDARFrameType;
-#pragma pack()
-
-#endif
-
-class LiPkg {
+class LdLidarDataProcess {
 public:
-  LiPkg();
+  LdLidarDataProcess();
 
-  ~LiPkg();
+  ~LdLidarDataProcess();
 
   void SetProductType(LDType typenumber);
 
@@ -128,10 +86,9 @@ private:
   double speed_;
   std::function<uint64_t(void)> get_timestamp_;
   bool is_poweron_comm_normal_;
-  uint8_t poweron_datapkg_count_;
   uint64_t last_pkg_timestamp_;
 
-  LiDARFrameType datapkg_;
+  LdLidarProtocol* protocol_handle_;
   Points2D lidar_scan_data_vec_;
   Points2D tmp_lidar_scan_data_vec_;
   std::mutex mutex_lock1_;
@@ -160,6 +117,6 @@ private:
 
 } // namespace ldlidar
 
-#endif  // __LIPKG_H
+#endif  // __LDLIDAR_DATAPROCESS_H__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

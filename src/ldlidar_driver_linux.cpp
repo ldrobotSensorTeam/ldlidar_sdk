@@ -5,9 +5,9 @@
  *         This code is only applicable to LDROBOT LiDAR products 
  * sold by Shenzhen LDROBOT Co., LTD
  * @version 0.1
- * @date 2021-05-12
+ * @date 2023-03
  *
- * @copyright Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,7 @@
 
 namespace ldlidar {
 
-
-
-LDLidarDriverLinuxInterface::LDLidarDriverLinuxInterface() : is_start_flag_(false), 
-  comm_pkg_(new LiPkg()),
+LDLidarDriverLinuxInterface::LDLidarDriverLinuxInterface() :  comm_pkg_(new LdLidarDataProcess()),
   comm_serial_(new SerialInterfaceLinux()),
   comm_tcp_network_(new TCPSocketInterfaceLinux()),
   comm_udp_network_(new UDPSocketInterfaceLinux()){
@@ -51,12 +48,12 @@ LDLidarDriverLinuxInterface::~LDLidarDriverLinuxInterface() {
   }
 }
 
-bool LDLidarDriverLinuxInterface::Start(LDType product_name, 
+bool LDLidarDriverLinuxInterface::Connect(LDType product_name, 
   std::string serial_port_name, 
   uint32_t serial_baudrate,
   CommunicationModeType comm_mode) {
 
-  if (is_start_flag_) {
+  if (is_connect_flag_) {
     return true;
   }
 
@@ -76,7 +73,7 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
 
   if (COMM_SERIAL_MODE == comm_mode) {
     comm_serial_->SetReadCallback(std::bind(
-      &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+      &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
     if (!comm_serial_->Open(serial_port_name, serial_baudrate)) {
       LOG_ERROR("serial is not open:%s", serial_port_name.c_str());
       return false;
@@ -86,19 +83,19 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
     return false;
   }
 
-  is_start_flag_ = true;
+  is_connect_flag_ = true;
 
-  SetIsOkStatus(true);
+  SetLidarDriverStatus(true);
 
   return true;
 }
 
-bool LDLidarDriverLinuxInterface::Start(LDType product_name, 
+bool LDLidarDriverLinuxInterface::Connect(LDType product_name, 
             const char* server_ip, 
             const char* server_port,
             CommunicationModeType comm_mode) {
 
-  if (is_start_flag_) {
+  if (is_connect_flag_) {
     return true;
   }
 
@@ -129,7 +126,7 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
   switch (comm_mode) {
     case COMM_TCP_CLIENT_MODE: {
       comm_tcp_network_->SetRecvCallback(std::bind(
-        &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+        &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
       bool result = comm_tcp_network_->CreateSocket(TCP_CLIENT, server_ip, server_port);
       if (!result) {
         LOG_ERROR("client host: create socket is fail.","");
@@ -140,7 +137,7 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
       break;
     case COMM_TCP_SERVER_MODE: {
       comm_tcp_network_->SetRecvCallback(std::bind(
-        &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+        &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
       bool result = comm_tcp_network_->CreateSocket(TCP_SERVER, server_ip, server_port);
       if (!result) {
         LOG_ERROR("server host: create socket is fail.","");
@@ -151,7 +148,7 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
       break;
     case COMM_UDP_CLIENT_MODE: {
       comm_udp_network_->SetRecvCallback(std::bind(
-        &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+        &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
       bool result = comm_udp_network_->CreateSocket(UDP_CLIENT, server_ip, server_port);
       if (!result) {
         LOG_ERROR("client host: create socket is fail.","");
@@ -169,7 +166,7 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
       break;
     case COMM_UDP_SERVER_MODE: {
       comm_udp_network_->SetRecvCallback(std::bind(
-        &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2)); 
+        &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2)); 
       bool result = comm_udp_network_->CreateSocket(UDP_SERVER, server_ip, server_port);
       if (!result) {
         LOG_ERROR("server host: create socket is fail.","");
@@ -189,34 +186,34 @@ bool LDLidarDriverLinuxInterface::Start(LDType product_name,
       break;
   }
   
-  is_start_flag_ = true;
+  is_connect_flag_ = true;
 
-  SetIsOkStatus(true);
+  SetLidarDriverStatus(true);
   
   return true;
 }
 
-bool LDLidarDriverLinuxInterface::Stop(void)  {
-  if (!is_start_flag_) {
+bool LDLidarDriverLinuxInterface::Disconnect(void)  {
+  if (!is_connect_flag_) {
     return true;
   }
 
-  SetIsOkStatus(false);
+  SetLidarDriverStatus(false);
 
   comm_serial_->Close();
   comm_tcp_network_->CloseSocket();
   comm_udp_network_->CloseSocket();
   
-  is_start_flag_ = false;
+  is_connect_flag_ = false;
   
   return true;
 }
 
-void LDLidarDriverLinuxInterface::EnableFilterAlgorithnmProcess(bool is_enable) {
+void LDLidarDriverLinuxInterface::EnablePointCloudDataFilter(bool is_enable) {
   comm_pkg_->SetNoiseFilter(is_enable);
 }
 
-bool LDLidarDriverLinuxInterface::WaitLidarCommConnect(int64_t timeout) {
+bool LDLidarDriverLinuxInterface::WaitLidarComm(int64_t timeout) {
   auto last_time = std::chrono::steady_clock::now();
 
   bool is_recvflag = false;
@@ -229,11 +226,10 @@ bool LDLidarDriverLinuxInterface::WaitLidarCommConnect(int64_t timeout) {
     std::chrono::steady_clock::now() - last_time).count() < timeout));
 
   if (is_recvflag) {
-    last_pubdata_times_ = std::chrono::steady_clock::now();
-    SetIsOkStatus(true);
+    SetLidarDriverStatus(true);
     return true;
   } else {
-    SetIsOkStatus(false);
+    SetLidarDriverStatus(false);
     return false;
   }
 }
@@ -308,6 +304,36 @@ uint8_t LDLidarDriverLinuxInterface::GetLidarErrorCode(void) {
   
   uint8_t errcode = comm_pkg_->GetLidarErrorCode();
   return errcode;
+}
+
+bool LDLidarDriverLinuxInterface::Start(void) {
+  if (is_start_flag_) {
+    return true;
+  }
+
+  if (!is_connect_flag_) {
+    return false;
+  }
+
+  is_start_flag_ = true;
+
+  last_pubdata_times_ = std::chrono::steady_clock::now();
+
+  SetLidarDriverStatus(true);
+
+  return true;
+}
+
+bool LDLidarDriverLinuxInterface::Stop(void) {
+  if (!is_start_flag_) {
+    return true;
+  }
+
+  SetLidarDriverStatus(false);
+  
+  is_start_flag_ = false;
+  
+  return true;
 }
 
 } // namespace ldlidar

@@ -5,9 +5,9 @@
  *         This code is only applicable to LDROBOT LiDAR products 
  * sold by Shenzhen LDROBOT Co., LTD
  * @version 0.1
- * @date 2021-05-12
+ * @date 2023-03
  *
- * @copyright Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@
 namespace ldlidar {
 
 LDLidarDriverWinInterface::LDLidarDriverWinInterface() : 
-  is_start_flag_(false),
-  comm_pkg_(new LiPkg()),
+  comm_pkg_(new LdLidarDataProcess()),
   comm_port_handle_(new SerialInterfaceWin()) {
   
   last_pubdata_times_ = std::chrono::steady_clock::now();
@@ -40,11 +39,11 @@ LDLidarDriverWinInterface::~LDLidarDriverWinInterface() {
   }
 }
 
-bool LDLidarDriverWinInterface::Start(LDType product_name, 
+bool LDLidarDriverWinInterface::Connect(LDType product_name, 
   std::string& serial_port_name, 
   PortParams& port_params) {
 
-  if (is_start_flag_) {
+  if (is_connect_flag_) {
     return true;
   }
 
@@ -67,39 +66,43 @@ bool LDLidarDriverWinInterface::Start(LDType product_name,
   comm_port_handle_->setPortParams(port_params);
   // 设置串口接收回调函数
   comm_port_handle_->setReadCallback(std::bind(
-    &LiPkg::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
+    &LdLidarDataProcess::CommReadCallback, comm_pkg_, std::placeholders::_1, std::placeholders::_2));
   // 打开串口
   if (!comm_port_handle_->open(serial_port_name)) {
     LOG_ERROR("serial is not open:%s", serial_port_name.c_str());
     return false;
   }
 
-  is_start_flag_ = true;
+  is_connect_flag_ = true;
 
-  SetIsOkStatus(true);
+  SetLidarDriverStatus(true);
 
   return true;
 }
 
-bool LDLidarDriverWinInterface::Stop(void)  {
-  if (!is_start_flag_) {
+bool LDLidarDriverWinInterface::Disconnect(void)  {
+  if (!is_connect_flag_) {
     return true;
   }
 
-  SetIsOkStatus(false);
+  SetLidarDriverStatus(false);
 
   comm_port_handle_->close();
   
-  is_start_flag_ = false;
+  is_connect_flag_ = false;
   
   return true;
 }
 
-void LDLidarDriverWinInterface::EnableFilterAlgorithnmProcess(bool is_enable) {
+void LDLidarDriverWinInterface::EnablePointCloudDataFilter(bool is_enable) {
   comm_pkg_->SetNoiseFilter(is_enable);
 }
 
-bool LDLidarDriverWinInterface::WaitLidarCommConnect(int64_t timeout) {
+bool LDLidarDriverWinInterface::WaitLidarComm(int64_t timeout) {
+  if (!is_connect_flag_) {
+    return false;
+  }
+
   auto last_time = std::chrono::steady_clock::now();
 
   bool is_recvflag = false;
@@ -112,11 +115,10 @@ bool LDLidarDriverWinInterface::WaitLidarCommConnect(int64_t timeout) {
     std::chrono::steady_clock::now() - last_time).count() < timeout));
 
   if (is_recvflag) {
-    last_pubdata_times_ = std::chrono::steady_clock::now();
-    SetIsOkStatus(true);
+    SetLidarDriverStatus(true);
     return true;
   } else {
-    SetIsOkStatus(false);
+    SetLidarDriverStatus(false);
     return false;
   }
 }
@@ -191,6 +193,36 @@ uint8_t LDLidarDriverWinInterface::GetLidarErrorCode(void) {
   
   uint8_t errcode = comm_pkg_->GetLidarErrorCode();
   return errcode;
+}
+
+bool LDLidarDriverWinInterface::Start(void) {
+  if (is_start_flag_) {
+    return true;
+  }
+
+  if (!is_connect_flag_) {
+    return false;
+  }
+
+  is_start_flag_ = true;
+
+  last_pubdata_times_ = std::chrono::steady_clock::now();
+
+  SetLidarDriverStatus(true);
+
+  return true;
+}
+
+bool LDLidarDriverWinInterface::Stop(void) {
+  if (!is_start_flag_) {
+    return true;
+  }
+
+  SetLidarDriverStatus(false);
+  
+  is_start_flag_ = false;
+  
+  return true;
 }
 
 } // namespace ldlidar

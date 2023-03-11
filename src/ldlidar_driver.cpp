@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-05-12
  *
- * @copyright Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ namespace ldlidar {
 bool LDLidarDriver::is_ok_ = false;
 
 LDLidarDriver::LDLidarDriver() : 
+  is_start_flag_(false),
+  is_connect_flag_(false),
   sdk_pack_version_(LDLiDAR_SDK_VERSION_NUMBER) {
 
 }
@@ -37,11 +39,11 @@ std::string LDLidarDriver::GetLidarSdkVersionNumber(void) {
   return sdk_pack_version_;
 }
 
-bool LDLidarDriver::IsOk() {
+bool LDLidarDriver::Ok() {
   return is_ok_; 
 }
 
-void LDLidarDriver::SetIsOkStatus(bool status) {
+void LDLidarDriver::SetLidarDriverStatus(bool status) {
   is_ok_ = status;
 }
 

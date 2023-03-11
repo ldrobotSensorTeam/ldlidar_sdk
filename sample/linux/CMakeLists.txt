@@ -30,6 +30,7 @@ set(LDLIDAR_DRIVER_SOURCE_LINUX
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/ldlidar_driver.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/ldlidar_driver_linux.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/lipkg.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/ldlidar_protocol.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/log_module.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/network_socket_interface_linux.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../src/serial_interface_linux.cpp

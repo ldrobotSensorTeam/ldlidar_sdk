@@ -7,7 +7,7 @@
  * @version 0.1
  * @date 2021-11-09
  *
- * @copyright Copyright (c) 2021  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ namespace ldlidar {
 SlTransform::SlTransform(LDType version, bool to_right_hand) {
   switch (version) {
     case LDType::LD_14:
+    case LDType::LD_14P:
       offset_x_ = 5.9;
       offset_y_ = -18.975571;
       break;
@@ -86,6 +87,7 @@ Points2D SlTransform::Transform(const Points2D &data) {
     
     switch (version_) {
       case LDType::LD_14:
+      case LDType::LD_14P:
         if (n.distance == 0) {
           tmp2.push_back(PointData(angle, n.distance, 0, n.stamp));
         } else {

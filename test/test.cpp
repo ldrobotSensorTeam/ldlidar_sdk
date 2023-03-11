@@ -62,9 +62,39 @@ void AbortTesting(void) {
   exit(EXIT_FAILURE);
 }
 
-int function_main(int argc, char **argv) {
+struct LdsInfoStruct {
+  std::string ldtype_str;
+  ldlidar::LDType ldtype_enum;
+  uint32_t baudrate;
+};
+
+LdsInfoStruct LdsInfoArrary[3] = {
+  {"LD14", ldlidar::LDType::LD_14, 115200},
+  {"LD06", ldlidar::LDType::LD_06, 230400},
+  {"LD19", ldlidar::LDType::LD_19, 230400},
+};
+
+ldlidar::LDType GetLdsType(std::string in_str) {
+  for (auto item : LdsInfoArrary) {
+    if (!strcmp(in_str.c_str(), item.ldtype_str.c_str())) {
+      return item.ldtype_enum;
+    }
+  }
+  return ldlidar::LDType::NO_VER;
+}
+
+uint32_t GetLdsSerialPortBaudrateValue(std::string in_str) {
+  for (auto item : LdsInfoArrary) {
+    if (!strcmp(in_str.c_str(), item.ldtype_str.c_str())) {
+      return item.baudrate;
+    }
+  }
+  return 0;
+}
+
+int test(int argc, char **argv) {
   
-  if (argc != 2) {
+  if (argc != 3) {
     LOG_INFO("cmd error","");
     LOG_INFO("please input: ./test_node <lidar type> <serial number>","");
     LOG_INFO("example:","");
@@ -74,75 +104,91 @@ int function_main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
   
-  std::string port_name(argv[1]);
-  
-  ldlidar::LDLidarDriverLinuxInterface* node = new ldlidar::LDLidarDriverLinuxInterface();
-  
-  LOG_INFO("LDLiDAR SDK Pack Version is %s", node->GetLidarSdkVersionNumber().c_str());
+  std::string ldlidar_type_str(argv[1]);
+  std::string serial_port_name(argv[2]);
 
-  node->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
-
-  node->EnableFilterAlgorithnmProcess(true);
-
-  if (node->Start(ldlidar::LDType::LD_14, port_name)) {
-    LOG_INFO("ldlidar node start is success","");
-    LidarPowerOn();
-  } else {
-    LOG_ERROR("ldlidar node start is fail","");
+  // select ldrobot lidar sensor type.
+  ldlidar::LDType ldlidar_type_dest;
+  ldlidar_type_dest = GetLdsType(ldlidar_type_str);
+  if (ldlidar_type_dest == ldlidar::LDType::NO_VER) {
+    LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
     exit(EXIT_FAILURE);
   }
 
-  if (node->WaitLidarCommConnect(3500)) {
+  // if use serial communications interface, as select serial baudrate paramters.
+  uint32_t serial_baudrate_val;
+  serial_baudrate_val = GetLdsSerialPortBaudrateValue(ldlidar_type_str);
+  if (!serial_baudrate_val) {
+    LOG_WARN("ldlidar_type_str value is not sure: %s", ldlidar_type_str.c_str());
+    exit(EXIT_FAILURE);
+  }
+  
+  ldlidar::LDLidarDriverLinuxInterface* lidar_drv = 
+    ldlidar::LDLidarDriverLinuxInterface::Create();
+  
+  LOG_INFO("LDLiDAR SDK Pack Version is %s", lidar_drv->GetLidarSdkVersionNumber().c_str());
+
+  lidar_drv->RegisterGetTimestampFunctional(std::bind(&GetTimestamp)); 
+
+  lidar_drv->EnablePointCloudDataFilter(true);
+
+  if (lidar_drv->Connect(ldlidar_type_dest, serial_port_name, serial_baudrate_val)) {
+    LOG_INFO("ldlidar serial connect is success","");
+    // LidarPowerOn();
+  } else {
+    LOG_ERROR("ldlidar serial connect is fail","");
+    AbortTesting();
+  }
+
+  if (lidar_drv->WaitLidarComm(3500)) {
     LOG_INFO("ldlidar communication is normal.","");
   } else {
     LOG_ERROR("ldlidar communication is abnormal.","");
+    lidar_drv->Disconnect();
     AbortTesting();
+  }
+
+  if (lidar_drv->Start()) {
+    LOG_INFO_LITE("ldlidar driver start is success.","");
+  } else {
+    LOG_ERROR_LITE("ldlidar driver start is fail.","");
   }
   
   ldlidar::Points2D laser_scan_points;
   int cnt = 100;
-  while (ldlidar::LDLidarDriver::IsOk()) {
+  while (ldlidar::LDLidarDriverLinuxInterface::Ok()) {
     if ((cnt--) <= 0) {
-      node->Stop();
+      lidar_drv->Stop();
     }
 
-    switch (node->GetLaserScanData(laser_scan_points, 1500)){
+    switch (lidar_drv->GetLaserScanData(laser_scan_points, 1500)){
       case ldlidar::LidarStatus::NORMAL: {
         double lidar_scan_freq = 0;
-        node->GetLidarScanFreq(lidar_scan_freq);
-
+        lidar_drv->GetLidarScanFreq(lidar_scan_freq);
 #ifdef __LP64__
-        LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%lu, stamp_back:%lu",
+        LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%lu, stamp_end:%lu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #else
-        LOG_INFO("speed(Hz):%f,size:%d,stamp_front:%llu, stamp_back:%llu",
+        LOG_INFO_LITE("speed(Hz):%f, size:%d,stamp_begin:%llu, stamp_end:%llu",
             lidar_scan_freq, laser_scan_points.size(), laser_scan_points.front().stamp, laser_scan_points.back().stamp);
 #endif
-
-        if (laser_scan_points.front().stamp >= laser_scan_points.back().stamp) {
-          LOG_ERROR("timestamp error!","");
-          node->Stop();
-          AbortTesting();
-        }
-        
-        int distance_zero_point_cnt = 0;
+        //  output 2d point cloud data
+#if 0
         for (auto point : laser_scan_points) {
-          if (0 == point.distance) {
-            distance_zero_point_cnt++;
-          }
+#ifdef __LP64__
+          LOG_INFO_LITE("stamp(ns):%lu,angle:%f,distance(mm):%d,intensity:%d", 
+              point.stamp, point.angle, point.distance, point.intensity);
+#else
+          LOG_INFO_LITE("stamp(ns):%llu,angle:%f,distance(mm):%d,intensity:%d", 
+              point.stamp, point.angle, point.distance, point.intensity);
+#endif
         }
-        
-        if (distance_zero_point_cnt >= (int)laser_scan_points.size()) {
-          LOG_ERROR("a frame distance is zero value","");
-          node->Stop();
-          AbortTesting();
-        }
-
+#endif
         break;
       }
       case ldlidar::LidarStatus::DATA_TIME_OUT: {
-        LOG_ERROR("point cloud data publish time out, please check your lidar device.","");
-        node->Stop();
+        LOG_ERROR_LITE("point cloud data publish time out, please check your lidar device.","");
+        lidar_drv->Stop();
         AbortTesting();
         break;
       }
@@ -156,12 +202,11 @@ int function_main(int argc, char **argv) {
     usleep(1000*166);  // sleep 166ms , 6hz
   }
 
-  node->Stop();
-  LidarPowerOff();
+  lidar_drv->Stop();
+  lidar_drv->Disconnect();
   sleep(3);
 
-  delete node;
-  node = nullptr;
+  ldlidar::LDLidarDriverLinuxInterface::Destory(lidar_drv);
 
   return 0;
 }
@@ -174,7 +219,7 @@ int main(int argc, char** argv) {
   }
   
   for (int i = 0; i < 10000; i++) {
-    function_main(argc, argv);
+    test(argc, argv);
   }
   
   LOG_INFO("test is end.","");

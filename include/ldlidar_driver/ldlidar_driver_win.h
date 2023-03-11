@@ -5,9 +5,9 @@
  *         This code is only applicable to LDROBOT LiDAR LD14
  * products sold by Shenzhen LDROBOT Co., LTD
  * @version 0.1
- * @date 2021-05-12
+ * @date 2023-03
  *
- * @copyright Copyright (c) 2022  SHENZHEN LDROBOT CO., LTD. All rights
+ * @copyright Copyright (c) 2017-2023  SHENZHEN LDROBOT CO., LTD. All rights
  * reserved.
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #define __LDLIDAR_DRIVER_SDK_WIN_INTERFACE_H__
 
 #include "ldlidar_driver/ldlidar_driver.h"
-#include "ldlidar_driver/lipkg.h"
+#include "ldlidar_driver/ldlidar_dataprocess.h"
 #include "ldlidar_driver/log_module.h"
 #include "ldlidar_driver/serial_interface_win.h"
 
@@ -35,7 +35,7 @@ public:
   ~LDLidarDriverWinInterface();
   
   /**
-   * @brief start lidar device handle node
+   * @brief Communcation port open and assert initlization param
    * @param product_name
    *        ldlidar product type: ldlidar::LDType, value:
    *          - ldlidar::LDType::NOVER
@@ -49,13 +49,18 @@ public:
    * @retval value is true, start is success;
    *   value is false, start is failed.
   */
-  bool Start(LDType product_name, 
+  bool Connect(LDType product_name, 
               std::string& serial_port_name, 
               PortParams& port_params);
   
-  bool Stop(void);
+  /**
+   * @brief Communication port close
+   * @retval  value is  ture, close success.
+   *   value is false, close fail.
+  */
+  bool Disconnect(void);
   
-  void EnableFilterAlgorithnmProcess(bool is_enable) override;
+  void EnablePointCloudDataFilter(bool is_enable) override;
 
   /**
    * @brief Whether the connection of the communication channel is normal after the lidar is powered on
@@ -64,7 +69,7 @@ public:
    * @retval if times >= 1000, return false, communication connection is fail;
    *   if "times < 1000", return ture, communication connection is successful.
   */
-  bool WaitLidarCommConnect(int64_t timeout = 1000) override;
+  bool WaitLidarComm(int64_t timeout = 1000) override;
 
   /**
    * @brief get lidar laser scan point cloud data
@@ -104,9 +109,37 @@ public:
   */
   uint8_t GetLidarErrorCode(void) override;
 
+  /**
+   * @brief Start lidar driver node
+   * @param none
+   * @retval value is true, start is success;
+   *   value is false, start is failed.
+  */
+  bool Start(void) override;
+  
+  /**
+   * @brief Stop lidar driver node
+   * @param none
+   * @retval value is true, stop is success;
+   *  value is false, stop is failed.
+  */
+  bool Stop(void) override;
+
+  static LDLidarDriverWinInterface* Create(void) {
+    LDLidarDriverWinInterface* pdrv = new LDLidarDriverWinInterface();
+    return pdrv;
+  }
+
+  static void Destory(LDLidarDriverWinInterface* pdrv) {
+    if (pdrv != nullptr) {
+      delete pdrv;
+    }
+  }
+
 private:
-  bool is_start_flag_;
-  LiPkg* comm_pkg_;
+  // bool is_start_flag_;
+  // bool is_connect_flag_;
+  LdLidarDataProcess* comm_pkg_;
   SerialInterfaceWin* comm_port_handle_;
   std::function<uint64_t(void)> register_get_timestamp_handle_;
   std::chrono::steady_clock::time_point last_pubdata_times_;
