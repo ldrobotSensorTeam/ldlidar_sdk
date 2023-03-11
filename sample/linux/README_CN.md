@@ -23,6 +23,8 @@ $ ./build/ldlidar <lidar_typename> <serial_number>
 # example:
 # LDLiDAR LD14 
 $ ./build/ldlidar LD14 /dev/ttyUSB0
+# LDLiDAR LD14P 
+$ ./build/ldlidar LD14P /dev/ttyUSB0
 # LDLiDAR LD06
 $ ./build/ldlidar LD06 /dev/ttyUSB0
 # LDLiDAR LD19

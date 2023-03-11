@@ -37,11 +37,12 @@ int main(int argc, char** argv) {
     uint32_t baudrate;
   };
 
-  const int inf_array_size = 3;
+  const int inf_array_size = 4;
   lidar_inf_struct inf_array[inf_array_size] = {
       {0, "LDLiDAR LD06", ldlidar::LDType::LD_06, 230400},
       {1, "LDLiDAR LD14", ldlidar::LDType::LD_14, 115200},
-      {2, "LDLiDAR LD19", ldlidar::LDType::LD_19, 230400}};
+      {2, "LDLiDAR LD14P", ldlidar::LDType::LD_14P, 230400},
+      {3, "LDLiDAR LD19", ldlidar::LDType::LD_19, 230400}};
 
   printf("The SDK support ldlidar product:\n");
   for (auto inf_base : inf_array) {

@@ -44,8 +44,9 @@ struct LdsInfoStruct {
   uint32_t baudrate;
 };
 
-LdsInfoStruct LdsInfoArrary[3] = {
+LdsInfoStruct LdsInfoArrary[4] = {
   {"LD14", ldlidar::LDType::LD_14, 115200},
+  {"LD14P", ldlidar::LDType::LD_14P, 230400},
   {"LD06", ldlidar::LDType::LD_06, 230400},
   {"LD19", ldlidar::LDType::LD_19, 230400},
 };
@@ -75,6 +76,7 @@ int main(int argc, char **argv) {
     LOG_INFO("please input: ./ldlidar <lidar type> <serial number>","");
     LOG_INFO("example:","");
     LOG_INFO("./ldlidar LD14 /dev/ttyUSB0","");
+    LOG_INFO("./ldlidar LD14P /dev/ttyUSB0","");
     LOG_INFO("./ldlidar LD06 /dev/ttyUSB0","");
     LOG_INFO("./ldlidar LD19 /dev/ttyUSB0","");
     exit(EXIT_FAILURE);
