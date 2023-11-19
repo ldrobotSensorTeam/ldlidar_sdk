@@ -1,4 +1,25 @@
-# LDLiDAR SDK
+# LDLiDAR SDK - Fixed
+
+## Fixes by MrKussen including:
+
+- Deleted non-working code
+- Added missing functions
+- Fixing includes
+
+## How to use (mostly for beginners):
+
+You can use this SDK by just adding the cpp files and the headers to your projects. 
+
+When you compile, there might be errors if you have UNICODE or _UNICODE defined, so avoid defining those if you can, or you will have to change between wide and thin characters in the source code. 
+
+Make sure that you compile the .cpp files here as well as your program files. 
+
+(For example, compilation with g++ can be done by placing your program files in /src/ and running g++ -g ./src/*.cpp)
+
+---
+
+## Supported products
+
 This SDK is only applicable to the LiDAR products sold by Shenzhen LDROBOT Co., LTD. 
 |    product models      |  range types |
 |     ----               |  ----         |
