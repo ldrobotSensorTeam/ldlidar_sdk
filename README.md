@@ -5,6 +5,7 @@
 - Deleted non-working code
 - Added missing functions
 - Fixing includes
+- The linux code was mostly fine, most changes were either in the windows code or the logging module
 
 ## How to use (mostly for beginners):
 
