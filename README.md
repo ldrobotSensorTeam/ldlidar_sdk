@@ -5,6 +5,8 @@
 - Deleted non-working code
 - Added missing functions
 - Fixing includes
+- Added one missing header guard instead of pragma once, to make the code uniform.
+- Added platform-dependant defines to decrease confusion and making sure that only code for the right platform will be compiled and run.
 - The linux code was mostly fine, most changes were either in the windows code or the logging module
 
 ## How to use (mostly for beginners):
