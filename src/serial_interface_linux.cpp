@@ -20,6 +20,7 @@
 #include "ldlidar_driver/serial_interface_linux.h"
 #include "ldlidar_driver/log_module.h"
 
+#ifdef __linux__
 
 #define MAX_ACK_BUF_LEN 4096
 
@@ -179,6 +180,6 @@ void SerialInterfaceLinux::RxThreadProc(void *param) {
 }
 
 } // namespace ldlidar
-
+#endif //__linux__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

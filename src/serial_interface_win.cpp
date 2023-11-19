@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+#ifdef WIN32
+
 #include "ldlidar_driver/serial_interface_win.h"
 #include "ldlidar_driver/log_module.h"
 
@@ -323,4 +325,6 @@ void SerialInterfaceWin::rxThreadProc(SerialInterfaceWin *pClass) {
 
   delete[] rxBuf;
 }
+
+#endif //WIN32
 /********************* (C) COPYRIGHT LD Robot *******END OF FILE ********/

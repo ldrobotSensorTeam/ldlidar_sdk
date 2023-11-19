@@ -20,6 +20,8 @@
 #ifndef __LINUX_SERIAL_PORT_H__
 #define __LINUX_SERIAL_PORT_H__
 
+#ifdef __linux__
+
 #include <inttypes.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -75,7 +77,8 @@ private:
 
 } // namespace ldlidar
 
-#endif  //__LINUX_SERIAL_PORT_H__
+#endif //__linux__
+#endif //__LINUX_SERIAL_PORT_H__
 
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

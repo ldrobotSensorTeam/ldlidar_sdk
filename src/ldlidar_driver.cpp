@@ -22,6 +22,13 @@
 
 namespace ldlidar {
 
+uint64_t GetSystemTimeStamp(void) {
+	std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> tp = 
+		std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now());
+	auto tmp = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
+	return ((uint64_t)tmp.count());
+}
+
 bool LDLidarDriver::is_ok_ = false;
 
 LDLidarDriver::LDLidarDriver() : 

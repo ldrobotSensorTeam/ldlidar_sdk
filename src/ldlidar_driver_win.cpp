@@ -18,6 +18,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifdef WIN32
+
 #include "ldlidar_driver/ldlidar_driver_win.h"
 
 namespace ldlidar {
@@ -27,6 +30,7 @@ LDLidarDriverWinInterface::LDLidarDriverWinInterface() :
   comm_port_handle_(new SerialInterfaceWin()) {
   
   last_pubdata_times_ = std::chrono::steady_clock::now();
+  RegisterGetTimestampFunctional(std::bind(GetSystemTimeStamp));
 }
 
 LDLidarDriverWinInterface::~LDLidarDriverWinInterface() {
@@ -226,5 +230,7 @@ bool LDLidarDriverWinInterface::Stop(void) {
 }
 
 } // namespace ldlidar
+
+#endif //WIN32
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

@@ -21,6 +21,8 @@
 #ifndef __LDLIDAR_DRIVER_SDK_WIN_INTERFACE_H__
 #define __LDLIDAR_DRIVER_SDK_WIN_INTERFACE_H__
 
+#ifdef WIN32
+
 #include "ldlidar_driver/ldlidar_driver.h"
 #include "ldlidar_driver/ldlidar_dataprocess.h"
 #include "ldlidar_driver/log_module.h"
@@ -72,7 +74,7 @@ public:
   bool WaitLidarComm(int64_t timeout = 1000) override;
 
   /**
-   * @brief get lidar laser scan point cloud data
+   * @brief get lidar laser scan point cloud data | NOTE THAT THIS DOES NOT RETURN X AND Y, ONLY ANGLE AND DISTANCE
    * @param [output]
    * *@param dst: type is ldlidar::Point2D, value is laser scan point cloud data
    * @param [in]
@@ -147,6 +149,7 @@ private:
 
 } // namespace ldlidar
 
+#endif //WIN32
 #endif // __LDLIDAR_DRIVER_NODE_H__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

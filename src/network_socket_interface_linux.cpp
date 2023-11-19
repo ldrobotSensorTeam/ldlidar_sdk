@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 
+#ifdef __linux__
+
 #include "ldlidar_driver/network_socket_interface_linux.h"
 #include "ldlidar_driver/log_module.h"
+
 
 #define MAX_RECV_BUF_LEN 4096
 
@@ -454,5 +457,6 @@ void TCPSocketInterfaceLinux::RecvThreadProc(void *param) {
 }
 
 } // namespace ldlidar
+#endif //__linux__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/
