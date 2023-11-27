@@ -17,7 +17,7 @@ When you compile, there might be errors if you have UNICODE or _UNICODE defined,
 
 Make sure that you compile the .cpp files here as well as your program files. 
 
-(For example, compilation with g++ can be done by placing your program files in /src/ and running g++ -g ./src/*.cpp)
+(For example, compilation with g++ can be done by placing your program files in /src/ and running g++ ./src/*.cpp -I./include/)
 
 ---
 
@@ -25,11 +25,11 @@ Make sure that you compile the .cpp files here as well as your program files.
 
 This SDK is only applicable to the LiDAR products sold by Shenzhen LDROBOT Co., LTD. 
 |    product models      |  range types |
-|     ----               |  ----         |
-|   LDROBOT LiDAR LD06   | 2D DTOF |
-|   LDROBOT LiDAR LD19   | 2D DTOF |
-|   LDROBOT LiDAR LD14   | 2D Triangle|
-|   LDROBOT LiDAR LD14P   | 2D Triangle|
+|     ----               |  ----        |
+|   LDROBOT LiDAR LD06   | 2D DTOF      |
+|   LDROBOT LiDAR LD19   | 2D DTOF      |
+|   LDROBOT LiDAR LD14   | 2D Triangle  |
+|   LDROBOT LiDAR LD14P  | 2D Triangle  |
 
 ---
 ## Get SDK
