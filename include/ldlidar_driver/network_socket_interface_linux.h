@@ -20,6 +20,8 @@
 #ifndef __SOCKET_INTERFACE_LINUX_H__
 #define __SOCKET_INTERFACE_LINUX_H__
 
+#ifdef __linux__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -120,6 +122,8 @@ private:
 };
 
 } // namespace ldlidar
+
+#endif // __linux__
 #endif //  __SOCKET_INTERFACE_LINUX_H__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

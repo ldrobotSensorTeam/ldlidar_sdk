@@ -16,14 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef __WINDOWS_SERIAL_PORT_H__
+#define __WINDOWS_SERIAL_PORT_H__
 
-#pragma once
+#ifdef WIN32
+
 #include <Windows.h>
 
 #include <atomic>
 #include <string>
 #include <thread>
 #include <vector>
+#include <functional>
 
 struct PortInfo {
   std::string name;
@@ -77,6 +81,10 @@ struct PortParams {
 };
 
 class SerialInterfaceWin {
+  private:
+  std::function<void(std::string)> commErrorHandle;
+  std::function<void(const char *, size_t length)> readCallback;
+
  public:
   SerialInterfaceWin();
   ~SerialInterfaceWin();
@@ -115,10 +123,9 @@ class SerialInterfaceWin {
   OVERLAPPED mOverlappedRecv;
   std::atomic<bool> mRxThreadRunFlag;
 
-  std::function<void(std::string)> commErrorHandle;
-  std::function<void(const char *, size_t length)> readCallback;
-
   PortParams portParams;
 };
 
+#endif //WIN32
+#endif //__WINDOWS_SERIAL_PORT_H__
 /********************* (C) COPYRIGHT LD Robot *******END OF FILE ********/

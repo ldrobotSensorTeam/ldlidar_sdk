@@ -32,23 +32,6 @@
 
 LogModule* LogModule::s_plog_module_ = NULL;
 
-
-LogModule* LogModule::GetInstance(__in const char* filename, __in const char* funcname, __in int lineno,LogLevel level,ILogRealization* plog) {
-	if (s_plog_module_ == NULL) {
-		s_plog_module_ = new LogModule();
-	}
-	s_plog_module_->logInfo_.str_filename = filename;
-	s_plog_module_->logInfo_.str_funcname = funcname;
-	s_plog_module_->logInfo_.n_linenumber = lineno;
-	s_plog_module_->logInfo_.loglevel = level;
-	
-	if (plog != NULL) {
-		s_plog_module_->p_realization_->free();
-		s_plog_module_->p_realization_ = plog;
-	}
-	return s_plog_module_;
-}
-
 LogModule* LogModule::GetInstance(LogLevel level, ILogRealization* plog) {
 	if (s_plog_module_ == NULL) {
 		s_plog_module_ = new LogModule();

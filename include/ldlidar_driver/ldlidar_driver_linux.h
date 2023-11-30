@@ -21,6 +21,8 @@
 #ifndef __LDLIDAR_DRIVER_SDK_LINUX_INTERFACE_H__
 #define __LDLIDAR_DRIVER_SDK_LINUX_INTERFACE_H__
 
+#ifdef __linux__
+
 #include "ldlidar_driver/ldlidar_driver.h"
 #include "ldlidar_driver/ldlidar_dataprocess.h"
 #include "ldlidar_driver/serial_interface_linux.h"
@@ -158,6 +160,7 @@ private:
 
 } // namespace ldlidar
 
+#endif //__linux__
 #endif // __LDLIDAR_DRIVER_NODE_H__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

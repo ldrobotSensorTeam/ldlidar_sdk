@@ -28,6 +28,8 @@
 
 namespace ldlidar {
 
+uint64_t GetSystemTimeStamp(void);
+
 class LDLidarDriver {
 public:
   LDLidarDriver();

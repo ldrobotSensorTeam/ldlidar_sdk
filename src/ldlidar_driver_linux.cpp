@@ -18,6 +18,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifdef __linux__
+
 #include "ldlidar_driver/ldlidar_driver_linux.h"
 
 namespace ldlidar {
@@ -28,6 +31,7 @@ LDLidarDriverLinuxInterface::LDLidarDriverLinuxInterface() :  comm_pkg_(new LdLi
   comm_udp_network_(new UDPSocketInterfaceLinux()){
   
   last_pubdata_times_ = std::chrono::steady_clock::now();
+  RegisterGetTimestampFunctional(std::bind(GetSystemTimeStamp));
 }
 
 LDLidarDriverLinuxInterface::~LDLidarDriverLinuxInterface() {
@@ -337,5 +341,7 @@ bool LDLidarDriverLinuxInterface::Stop(void) {
 }
 
 } // namespace ldlidar
+
+#endif //__linux__
 /********************* (C) COPYRIGHT SHENZHEN LDROBOT CO., LTD *******END OF
  * FILE ********/

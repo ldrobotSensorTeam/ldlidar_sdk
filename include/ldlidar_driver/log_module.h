@@ -159,7 +159,7 @@ public:
 
   ILogRealization* p_realization_; 
 public:
-  static  LogModule* GetInstance( __in const char* filename, __in const char* funcname,__in int lineno, LogLevel level, ILogRealization* plog = NULL);
+  // static  LogModule* GetInstance( __in const char* filename, __in const char* funcname,__in int lineno, LogLevel level, ILogRealization* plog = NULL);
   static  LogModule* GetInstance(LogLevel level, ILogRealization* plog = NULL);
   static  LogModule* GetInstancePrintOriginData(LogLevel level, ILogRealization* plog = NULL);
 
@@ -200,7 +200,7 @@ private:
 };
 
 #ifdef ENABLE_LOG_DIS_OUTPUT
-#define  LOG(level,format,...)   LogModule::GetInstance(__FILE__, __FUNCTION__, __LINE__,level)->LogPrintInf(format,__VA_ARGS__);
+#define  LOG(level,format,...)   LogModule::GetInstance(level)->LogPrintInf(format,__VA_ARGS__);
 #define  LOG_DEBUG(format,...)   LOG(LogModule::DEBUG_LEVEL,format,__VA_ARGS__)
 #define  LOG_INFO(format,...)    LOG(LogModule::INFO_LEVEL,format,__VA_ARGS__)
 #define  LOG_WARN(format,...)    LOG(LogModule::WARNING_LEVEL,format,__VA_ARGS__)
